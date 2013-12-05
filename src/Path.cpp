@@ -15,6 +15,9 @@ Path::Path(const int initialNumber) {
 	push_number(initialNumber);
 }
 
+Path::Path() {
+}
+
 void Path::push_number(const int num){
 	numbers_.push_back(num);
 }
@@ -24,6 +27,10 @@ int Path::pop_number(){
 	int ret (*iter);
 	numbers_.pop_back();
 	return ret;
+}
+
+bool Path::at_end() const{
+	return numbers_.empty();
 }
 
 std::string Path::toString() const {
@@ -57,6 +64,23 @@ std::ostream& operator << (std::ostream& out, Path p){
 	out << p.toString();
 	return out;
 }
+
+Path Path::cons(Path to_cons) {
+	while(!to_cons.at_end()){
+		push_number(to_cons.pop_number());
+	}
+	return *this;
+}
+
+
+bool Path::empty() const {
+	return numbers_.empty();
+}
+
+
+
+
+
 
 
 

@@ -8,6 +8,8 @@
 #include "QuestionList.h"
 #include "Question.h"
 #include "ChoiceQuestion.h"
+#include "ScaleQuestion.h"
+#include "BoolQuestion.h"
 #include <iostream>
 #include <fstream>
 #include <uuid/uuid.h>
@@ -52,36 +54,33 @@ void QuestionList::list(std::ostream * out) {
 	//over vragen lopen en ze uitprinten
 	for (std::vector<Question*>::iterator i = questions_.begin();
 			i != questions_.end(); ++i) {
-		*out << **i << std::endl;
+		*out << **i;
 	}
 }
 
 //add commando met een positie
-int QuestionList::add(Question::QuestionType type, std::string& question_string,
-		std::string *answers, int amount_of_answers, int position) {
+Path QuestionList::add(Question::QuestionType type,
+		std::string& question_string, std::string *answers,
+		int amount_of_answers, int position) {
 	Question * q;
 	if (type == Question::TEXT) {
-		q = new Question(Path(position), question_string);
+		q = new Question(current_path_.cons(Path(position)), question_string);
 	} else if (type == Question::CHOICE) {
-		q = new ChoiceQuestion(Path(position), question_string, answers,
+		q = new ChoiceQuestion(current_path_.cons(Path(position)), question_string, answers,
 				amount_of_answers);
 	} else if (type == Question::BOOL) {
-		q = new ChoiceQuestion(Path(position), question_string, answers,
-				amount_of_answers);
+		q = new BoolQuestion(current_path_.cons(Path(position)), question_string);
+	} else {
+		throw std::string(
+				"You have to specify more for these type of questions");
 	}
-	questions_.insert(questions_.begin() + position - 1, q);
-
-	for (std::vector<Question*>::iterator it = questions_.begin() + position;
-			it != questions_.end(); it++) {
-		(**it).increase_id();
-	}
-	dirty = true;
-	return position;
+	return add(q, position);
 }
 
 //overloaden om add zonder positie mogelijk te maken
-int QuestionList::add(Question::QuestionType type, std::string& question_string,
-		std::string *answers, int amount_of_answers) {
+Path QuestionList::add(Question::QuestionType type,
+		std::string& question_string, std::string *answers,
+		int amount_of_answers) {
 	return add(type, question_string, answers, amount_of_answers,
 			amountOfQuestions() + 1);
 }
@@ -224,6 +223,26 @@ void QuestionList::read_from_file(std::ifstream * input_file) {
 
 					ss.clear();
 
+				} else if (question_type.compare(
+						Question::get_type_string(Question::BOOL)) == 0) {
+					ss.ignore();
+					getline(ss, question_string);
+					Question* current_question = new BoolQuestion(
+							Path(question_number), question_string);
+					questions_.push_back(current_question);
+					ss.clear();
+
+				} else if (question_type.compare(
+						Question::get_type_string(Question::SCALE)) == 0) {
+					int min, max;
+					ss >> min;
+					ss >> max;
+					ss.ignore();
+					getline(ss, question_string);
+					Question* current_question = new ScaleQuestion(
+							Path(question_number), question_string, min, max);
+					questions_.push_back(current_question);
+					ss.clear();
 				} else {
 					//kent het question type niet
 					throw std::string("Unknown question type");
@@ -241,23 +260,47 @@ void QuestionList::read_from_file(std::ifstream * input_file) {
 
 }
 
-int QuestionList::add(Question::QuestionType type, std::string& question_string,
-		int min, int max) {
-	return add(type, question_string, min, max, amountOfQuestions() - 1);
+Path QuestionList::add(Question::QuestionType type,
+		std::string& question_string, int min, int max) {
+	int p = amountOfQuestions() + 1;
+	return add(type, question_string, min, max, p);
 
 }
 
-int QuestionList::add(Question::QuestionType type, std::string& question_string,
-		int min, int max, int position) {
-	Question * q;
-	q = new ScaleQuestion(Path(position), question_string, min, max);
-	questions_.insert(questions_.begin() + position - 1, q);
+Path QuestionList::add(Question::QuestionType type,
+		std::string& question_string, int min, int max, int position) {
+	return add(new ScaleQuestion(current_path_.cons(Path(position)), question_string, min,max), position);
+}
 
+Path QuestionList::add(Question* question) {
+	return add(question, amountOfQuestions() + 1);
+}
+
+Path QuestionList::add(Question* question, int position) {
+	questions_.insert(questions_.begin() + position - 1, question);
 	for (std::vector<Question*>::iterator it = questions_.begin() + position;
 			it != questions_.end(); it++) {
 		(**it).increase_id();
 	}
 	dirty = true;
-	return position;
+	return Path(position);
+}
+
+Path QuestionList::add(Question::QuestionType type,
+		std::string& question_string) {
+	return add(type, question_string, amountOfQuestions() + 1);
+}
+
+Path QuestionList::add(Question::QuestionType type,
+		std::string& question_string, int position) {
+	Path p(0);
+	if (type == Question::TEXT) {
+		p = add(new Question(current_path_.cons(Path(position)), question_string), position);
+	} else if (type == Question::BOOL) {
+		p = add(new BoolQuestion(current_path_.cons(Path(position)), question_string), position);
+	} else {
+		throw std::string("You have to specify more for this type of question");
+	}
+	return p;
 }
 

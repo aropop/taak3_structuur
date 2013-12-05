@@ -18,6 +18,7 @@ public:
     bool in_range(int possible_answer) const;
     int getMin() const;
 	int getMax() const;
+	std::string get_question_file_string() const;
 
 private:
     int min_;

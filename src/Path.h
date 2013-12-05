@@ -13,13 +13,17 @@
 
 class Path {
 public:
+	Path();
 	Path(int initialNumber);
 	std::string toString() const;
 	void push_number(int num);
 	int pop_number();
 	bool operator==(const Path& path2) const;
+	bool at_end() const;
 	Path operator++();
 	Path operator--();
+	Path cons(Path to_cons);
+	bool empty() const;
 private:
 	std::vector<int> numbers_;
 

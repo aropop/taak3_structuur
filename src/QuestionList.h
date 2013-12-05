@@ -20,14 +20,18 @@ public:
 	//commando's
 	void list(std::ostream * out);
 
-	int add(Question::QuestionType type, std::string& question_string,
+	Path add(Question::QuestionType type, std::string& question_string,
 			std::string *answers, int amount_of_answers);
-	int add(Question::QuestionType type, std::string& question_string,
+	Path add(Question::QuestionType type, std::string& question_string,
 			std::string *answers, int amount_of_answers, int position);
-	int add(Question::QuestionType type, std::string& question_string, int min,
+	Path add(Question::QuestionType type, std::string& question_string, int min,
 			int max);
-	int add(Question::QuestionType type, std::string& question_string, int min,
+	Path add(Question::QuestionType type, std::string& question_string, int min,
 			int max, int position);
+	Path add(Question::QuestionType type, std::string& question_string);
+	Path add(Question::QuestionType type, std::string& question_string, int position);
+	Path add(Question * question);
+	Path add(Question * question, int position);
 
 	void edit(int question_number, std::string& new_question_string);
 
@@ -47,6 +51,8 @@ private:
 	std::string filename_;
 	std::vector<Question*> questions_;
 	uuid_t uuid_;
+
+	Path current_path_;
 
 	//hulp
 	void read_from_file(std::ifstream * input_file);

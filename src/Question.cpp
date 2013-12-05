@@ -49,12 +49,33 @@ std::string Question::get_question_file_string() const {
 
 std::string Question::get_string() const {
 	std::stringstream ss;
-	ss << id_.toString() << " " << Question::get_type_string(type_) << " " << question_string;
+	ss << id_.toString() << " " << Question::get_type_string(type_) << " " << question_string << std::endl;
 	return ss.str();
 }
 
 void Question::set_answers(std::string * answers, int amount) {
 	throw std::string("Kan geen antwoorden toevoegen voor dit soort vraag!");
 }
-
+//statische functie die de string voor het questiontype terug geeft
+std::string Question::get_type_string(Question::QuestionType type) {
+	std::string return_string;
+	switch (type) {
+	case Question::CHOICE:
+		return_string = std::string("CHOICE");
+		break;
+	case Question::TEXT:
+		return_string = std::string("TEXT");
+		break;
+	case Question::BOOL:
+		return_string = std::string("BOOL");
+		break;
+	case Question::SCALE:
+		return_string = std::string("SCALE");
+		break;
+	case Question::GROUP:
+		return_string = std::string("GROUP");
+		break;
+	}
+	return return_string;
+}
 

@@ -45,19 +45,7 @@ const int ChoiceQuestion::number_of_answers() const {
 	return amount_of_answers_;
 }
 
-//statische functie die de string voor het questiontype terug geeft
-std::string Question::get_type_string(Question::QuestionType type) {
-	std::string return_string;
-	switch (type) {
-	case Question::CHOICE:
-		return_string = std::string("CHOICE");
-		break;
-	case Question::TEXT:
-		return_string = std::string("TEXT");
-		break;
-	}
-	return return_string;
-}
+
 
 std::string ChoiceQuestion::get_question_file_string() const {
 	//string stream om gemakkelijk te werken

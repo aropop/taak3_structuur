@@ -51,14 +51,13 @@ void Parser::parse_dispatch() {
 	} else if (command.compare("add") == 0) {
 		//add commando
 		std::string question_type, question;
-		int index(0);
+		Path index(0);
 		ss >> question_type;
-
+		ss.ignore();
+		getline(ss, question);
 		//add is verschillend voor choice als voor tekst
 		if (question_type.compare(Question::get_type_string(Question::CHOICE))
 				== 0) {
-			ss.ignore();
-			getline(ss, question);
 			//eerst nieuwe antwoorden prompten
 			std::string * answers = prompt_for_choices();
 			//nieuwe toevoegen geeft de index terug
@@ -67,28 +66,23 @@ void Parser::parse_dispatch() {
 			print_add_text(question, index);
 		} else if (question_type.compare(
 				Question::get_type_string(Question::TEXT)) == 0) {
-			ss.ignore();
-			getline(ss, question);
+
 			//nieuwe toevoegen en commando afronden
-			index = ql_->add(Question::TEXT, question, NULL, 0);
+			index = ql_->add(Question::TEXT, question);
 			print_add_text(question, index);
 		} else if (question_type.compare(
 				Question::get_type_string(Question::BOOL)) == 0) {
-			ss.ignore();
-			getline(ss, question);
+
 			//nieuwe toevoegen en commando afronden
-			index = ql_->add(Question::BOOL, question, NULL, 0);
+			index = ql_->add(Question::BOOL, question);
 			print_add_text(question, index);
 		}else if (question_type.compare(
 				Question::get_type_string(Question::SCALE)) == 0) {
 			//nieuwe toevoegen en commando afronden
 			int min,max;
-
-			ss >> min;
-			ss >> max;
-
-			ss.ignore();
-			getline(ss, question);
+			*in_ >> min;
+			*in_ >> max;
+			in_->ignore();
 			index = ql_->add(Question::SCALE, question, min, max);
 			print_add_text(question, index);
 		}else {
@@ -117,7 +111,22 @@ void Parser::parse_dispatch() {
 			} else if (question_type.compare(
 					Question::get_type_string(Question::TEXT)) == 0) {
 				//TEXT question bouwen en toevoegen
-				ql_->add(Question::TEXT, question, NULL, 0, position);
+				ql_->add(Question::TEXT, question, position);
+				print_add_text(question, position);
+			}else if (question_type.compare(
+					Question::get_type_string(Question::BOOL)) == 0) {
+
+				//nieuwe toevoegen en commando afronden
+				ql_->add(Question::BOOL, question,  position);
+				print_add_text(question, position);
+			}else if (question_type.compare(
+					Question::get_type_string(Question::SCALE)) == 0) {
+				//nieuwe toevoegen en commando afronden
+				int min,max;
+				*in_ >> min;
+				*in_ >> max;
+				in_->ignore();
+				ql_->add(Question::SCALE, question, min, max);
 				print_add_text(question, position);
 			} else {
 				//onbekend type
@@ -280,8 +289,8 @@ std::string Parser::prompt_for_new_question_string(int index) {
 }
 
 //inline print functies om code reproductie te vermijden
-const inline void Parser::print_add_text(std::string& question, int position) {
-	*out_ << "Vraag (" << question << ") toegevoegd op plaats " << position
+const inline void Parser::print_add_text(std::string& question, Path position) {
+	*out_ << "Vraag (" << question << ") toegevoegd op plaats " << position.toString()
 			<< "." << std::endl;
 }
 

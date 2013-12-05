@@ -6,6 +6,7 @@
  */
 
 #include "BoolQuestion.h"
+#include <sstream>
 
 BoolQuestion::BoolQuestion() :
 		Question() {
@@ -21,5 +22,14 @@ BoolQuestion::BoolQuestion(Path id, std::string& question_string):Question(id, q
 
 bool BoolQuestion::accepts_character(char ch) {
 	return (ch == 'j') || (ch == 'y') || (ch == '1') || (ch == 'n') || (ch == 0);
+}
+
+std::string BoolQuestion::get_string(){
+	std::stringstream ss;
+	ss << id_.toString() << " " << get_type_string(type_) << " " << question_string;
+	return ss.str();
+}
+std::string BoolQuestion::get_question_file_string(){
+	return get_string();
 }
 

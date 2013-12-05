@@ -8,6 +8,7 @@
 #include "ScaleQuestion.h"
 
 ScaleQuestion::ScaleQuestion() {
+	copied = false;
 	type_ = SCALE;
 }
 
@@ -19,8 +20,10 @@ int ScaleQuestion::getMin() const {
 }
 
 ScaleQuestion::ScaleQuestion(Path id, std::string& question_string, int min,
-		int max) : Question(id, question_string),  min_(min), max_(max) {
+		int max) :
+		Question(id, question_string), min_(min), max_(max) {
 	type_ = SCALE;
+	copied = false;
 }
 
 bool ScaleQuestion::in_range(int possible_answer) const {
@@ -31,5 +34,10 @@ int ScaleQuestion::getMax() const {
 	return max_;
 }
 
-
+std::string ScaleQuestion::get_question_file_string() const {
+	std::stringstream ss;
+	ss << id_.toString() << " " << get_type_string(type_) << " " << min_ << " "
+			<< max_ << " " << question_string << std::endl;
+	return ss.str();
+}
 
