@@ -39,7 +39,7 @@ private:
 	inline void reset_parser_code();
 
 	const inline void print_add_text(std::string& question, Path position);
-	const inline void print_out_of_bounds(int index);
+	const inline void print_out_of_bounds(Path index);
 };
 
 #endif /* PARSER_H_ */

@@ -76,16 +76,16 @@ void Parser::parse_dispatch() {
 			//nieuwe toevoegen en commando afronden
 			index = ql_->add(Question::BOOL, question);
 			print_add_text(question, index);
-		}else if (question_type.compare(
+		} else if (question_type.compare(
 				Question::get_type_string(Question::SCALE)) == 0) {
 			//nieuwe toevoegen en commando afronden
-			int min,max;
+			int min, max;
 			*in_ >> min;
 			*in_ >> max;
 			in_->ignore();
 			index = ql_->add(Question::SCALE, question, min, max);
 			print_add_text(question, index);
-		}else {
+		} else {
 			//ongekend vraag type
 			*out_ << "Niet gekend vraag type: " << question_type << std::endl;
 		}
@@ -93,7 +93,8 @@ void Parser::parse_dispatch() {
 	} else if (command.compare("insert") == 0) {
 		//insert commando
 		std::string question_type, question;
-		int position;
+		ss.ignore();
+		Path position;
 		ss >> position;
 		//kijken of positie in range is
 		if (ql_->in_range(position)) {
@@ -113,16 +114,16 @@ void Parser::parse_dispatch() {
 				//TEXT question bouwen en toevoegen
 				ql_->add(Question::TEXT, question, position);
 				print_add_text(question, position);
-			}else if (question_type.compare(
+			} else if (question_type.compare(
 					Question::get_type_string(Question::BOOL)) == 0) {
 
 				//nieuwe toevoegen en commando afronden
-				ql_->add(Question::BOOL, question,  position);
+				ql_->add(Question::BOOL, question, position);
 				print_add_text(question, position);
-			}else if (question_type.compare(
+			} else if (question_type.compare(
 					Question::get_type_string(Question::SCALE)) == 0) {
 				//nieuwe toevoegen en commando afronden
-				int min,max;
+				int min, max;
 				*in_ >> min;
 				*in_ >> max;
 				in_->ignore();
@@ -187,16 +188,30 @@ void Parser::parse_dispatch() {
 		int index;
 		ss >> index;
 		//out of bounds
-		if(ql_->in_range(index)){
+		if (ql_->in_range(index)) {
 			//text vragen voor verwijderen
 			std::string text(ql_->get_question_string(index - 1));
 			ql_->delete_question(index - 1);
-			*out_ << "Vraag " << index << " (" << text << ") verwijderd." << std::endl;
-		}else{
+			*out_ << "Vraag " << index << " (" << text << ") verwijderd."
+					<< std::endl;
+		} else {
 			//error weergeven
 			print_out_of_bounds(index);
 		}
 
+	} else if (command.compare("group") == 0) {
+		ss.ignore();
+		Path p1;
+		Path p2;
+		ss >> p1;
+		ss >> p2;
+		std::string theme_string;
+		getline(ss, theme_string);
+		try{
+		ql_->group(p1, p2, theme_string);
+		}catch(std::string& e){
+			*out_ << e;
+		}
 	} else if (command.compare("exit") == 0) {
 		//exit commando
 		//alleen vragen voor een save als er aanpassing zijn
@@ -212,7 +227,7 @@ void Parser::parse_dispatch() {
 		if (ql_->dirty) {
 			ql_->save();
 		}
-		*out_ << "Bestand bewaard."	<< std::endl;
+		*out_ << "Bestand bewaard." << std::endl;
 	} else {
 		//verkeerde message
 		parser_code_ = WRONG_MESSAGE;
@@ -290,11 +305,12 @@ std::string Parser::prompt_for_new_question_string(int index) {
 
 //inline print functies om code reproductie te vermijden
 const inline void Parser::print_add_text(std::string& question, Path position) {
-	*out_ << "Vraag (" << question << ") toegevoegd op plaats " << position.toString()
-			<< "." << std::endl;
+	*out_ << "Vraag (" << question << ") toegevoegd op plaats "
+			<< position.toString() << "." << std::endl;
 }
 
-inline const void Parser::print_out_of_bounds(int index) {
-	*out_ << "Ongeldige invoer ("  << index << "), N=" << ql_->amountOfQuestions() << std::endl;
+inline const void Parser::print_out_of_bounds(Path index) {
+	*out_ << "Ongeldige invoer (" << index.toString() << "), N="
+			<< ql_->amountOfQuestions() << std::endl;
 }
 

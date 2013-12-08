@@ -18,20 +18,20 @@ public:
 	~QuestionList();
 
 	//commando's
-	void list(std::ostream * out);
+	void list(std::ostream * out) const;
 
 	Path add(Question::QuestionType type, std::string& question_string,
 			std::string *answers, int amount_of_answers);
 	Path add(Question::QuestionType type, std::string& question_string,
-			std::string *answers, int amount_of_answers, int position);
+			std::string *answers, int amount_of_answers, Path position);
 	Path add(Question::QuestionType type, std::string& question_string, int min,
 			int max);
 	Path add(Question::QuestionType type, std::string& question_string, int min,
 			int max, int position);
 	Path add(Question::QuestionType type, std::string& question_string);
-	Path add(Question::QuestionType type, std::string& question_string, int position);
+	Path add(Question::QuestionType type, std::string& question_string, Path position);
 	Path add(Question * question);
-	Path add(Question * question, int position);
+	Path add(Question * question, Path position);
 
 	void edit(int question_number, std::string& new_question_string);
 
@@ -40,12 +40,18 @@ public:
 	void delete_question(int question_number);
 
 	void save();
+	void save(std::ostream& out) const;
+
+	void group(Path& question1, Path& question2, std::string& theme_string);
 
 	//hulp
 	bool dirty;
-	bool in_range(int position);
+	bool in_range(Path position);
 	std::string get_question_string(int index);
 	int amountOfQuestions() const;
+	Path getCurrentPath() const;
+	void setCurrentPath(Path currentPath);
+	int length() const;
 
 private:
 	std::string filename_;

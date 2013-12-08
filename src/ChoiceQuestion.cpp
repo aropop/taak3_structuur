@@ -75,6 +75,7 @@ std::string ChoiceQuestion::get_string() const {
 	}
 	//vraag toevoegen
 	file_stringstream << question_string;
+	file_stringstream << std::endl;
 	return file_stringstream.str();
 
 }

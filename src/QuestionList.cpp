@@ -10,6 +10,7 @@
 #include "ChoiceQuestion.h"
 #include "ScaleQuestion.h"
 #include "BoolQuestion.h"
+#include "Group.h"
 #include <iostream>
 #include <fstream>
 #include <uuid/uuid.h>
@@ -50,9 +51,9 @@ QuestionList::~QuestionList(void) {
 }
 
 //list commando
-void QuestionList::list(std::ostream * out) {
+void QuestionList::list(std::ostream * out) const {
 	//over vragen lopen en ze uitprinten
-	for (std::vector<Question*>::iterator i = questions_.begin();
+	for (std::vector<Question*>::const_iterator i = questions_.begin();
 			i != questions_.end(); ++i) {
 		*out << **i;
 	}
@@ -61,15 +62,15 @@ void QuestionList::list(std::ostream * out) {
 //add commando met een positie
 Path QuestionList::add(Question::QuestionType type,
 		std::string& question_string, std::string *answers,
-		int amount_of_answers, int position) {
+		int amount_of_answers, Path position) {
 	Question * q;
 	if (type == Question::TEXT) {
-		q = new Question(current_path_.cons(Path(position)), question_string);
+		q = new Question(current_path_.cons(position), question_string);
 	} else if (type == Question::CHOICE) {
-		q = new ChoiceQuestion(current_path_.cons(Path(position)), question_string, answers,
-				amount_of_answers);
+		q = new ChoiceQuestion(current_path_.cons(position), question_string,
+				answers, amount_of_answers);
 	} else if (type == Question::BOOL) {
-		q = new BoolQuestion(current_path_.cons(Path(position)), question_string);
+		q = new BoolQuestion(current_path_.cons(position), question_string);
 	} else {
 		throw std::string(
 				"You have to specify more for these type of questions");
@@ -96,25 +97,29 @@ std::string uuid_to_string(char * character_array) {
 void QuestionList::save() {
 	//output file openen
 	std::fstream output_file(filename_.c_str(), std::ofstream::out);
-	char uuid_str[36];
-	uuid_unparse(uuid_, uuid_str);
-	//header wegschrijven
-	output_file << "VERSION 2" << std::endl << "ID " << uuid_to_string(uuid_str)
-			<< std::endl << "STEPS " << amountOfQuestions() << std::endl;
-	//vragen wegschrijven
-	for (std::vector<Question *>::iterator i = questions_.begin();
-			i != questions_.end(); i++) {
-		output_file << (**i).get_question_file_string();
-	}
-	//sluiten
-	output_file.close();
+	save(output_file);
 	//ql is niet meer dirty want is juist weggeschreven
+	//moet alleen op toplevel gebeuren
 	dirty = false;
 }
 
+void QuestionList::save(std::ostream& out) const {
+	char uuid_str[36];
+	uuid_unparse(uuid_, uuid_str);
+	//header wegschrijven
+	out << "VERSION 2" << std::endl << "ID " << uuid_to_string(uuid_str)
+			<< std::endl << "STEPS " << amountOfQuestions() << std::endl;
+	//vragen wegschrijven
+	for (std::vector<Question *>::const_iterator i = questions_.begin();
+			i != questions_.end(); i++) {
+		out << (**i).get_question_file_string();
+	}
+}
+
 //hulp functie die zegt of een bepaalde positie binnen het bereik ligt
-bool QuestionList::in_range(int position) {
-	return ((0 < position) && (position < (amountOfQuestions() + 1)));
+bool QuestionList::in_range(Path position) {
+	return ((0 < position.peek_front())
+			&& (position.peek_front() < (amountOfQuestions() + 1)));
 }
 
 //geeft de question string door
@@ -269,21 +274,31 @@ Path QuestionList::add(Question::QuestionType type,
 
 Path QuestionList::add(Question::QuestionType type,
 		std::string& question_string, int min, int max, int position) {
-	return add(new ScaleQuestion(current_path_.cons(Path(position)), question_string, min,max), position);
+	return add(
+			new ScaleQuestion(current_path_.cons(Path(position)),
+					question_string, min, max), position);
 }
 
 Path QuestionList::add(Question* question) {
 	return add(question, amountOfQuestions() + 1);
 }
 
-Path QuestionList::add(Question* question, int position) {
-	questions_.insert(questions_.begin() + position - 1, question);
-	for (std::vector<Question*>::iterator it = questions_.begin() + position;
-			it != questions_.end(); it++) {
-		(**it).increase_id();
+Path QuestionList::add(Question* question, Path position) {
+	if (position.length() > 1) {
+		int pos_on_this_level(position.pop_front_number());
+		dynamic_cast<Group*>(questions_.at(pos_on_this_level))->add(
+				questions_.at(pos_on_this_level), position);
+
+	} else {
+		questions_.insert(questions_.begin() + position.peek_front() - 1,
+				question);
+		for (std::vector<Question*>::iterator it = questions_.begin()
+				+ position.peek_front(); it != questions_.end(); it++) {
+			(**it).increase_id();
+		}
 	}
 	dirty = true;
-	return Path(position);
+	return position;
 }
 
 Path QuestionList::add(Question::QuestionType type,
@@ -292,15 +307,51 @@ Path QuestionList::add(Question::QuestionType type,
 }
 
 Path QuestionList::add(Question::QuestionType type,
-		std::string& question_string, int position) {
+		std::string& question_string, Path position) {
 	Path p(0);
 	if (type == Question::TEXT) {
-		p = add(new Question(current_path_.cons(Path(position)), question_string), position);
+		p = add(new Question(current_path_.cons(position), question_string),
+				position);
 	} else if (type == Question::BOOL) {
-		p = add(new BoolQuestion(current_path_.cons(Path(position)), question_string), position);
+		p = add(new BoolQuestion(current_path_.cons(position), question_string),
+				position);
 	} else {
 		throw std::string("You have to specify more for this type of question");
 	}
 	return p;
+}
+
+Path QuestionList::getCurrentPath() const {
+	return current_path_;
+}
+
+void QuestionList::setCurrentPath(Path currentPath) {
+	current_path_ = currentPath;
+}
+
+void QuestionList::group(Path& question1, Path& question2,
+		std::string& theme_string) {
+	if (!in_range(question1) || !in_range(question2)) {
+		throw std::string("Niet binnen bereik!\n");
+	}
+	if (question1.length() > 1) {
+		//pass through to lower level
+		int group(question1.pop_front_number());
+		question2.pop_front_number();
+		dynamic_cast<Group*>((questions_.at(group)))->group_questions(question1,
+				question2, theme_string);
+	} else {
+		//do it on this level
+		Group* grp = new Group(question1, theme_string,
+				questions_.at(question1.peek_number()),
+				questions_.at(question2.peek_number()));
+		questions_.erase(questions_.begin() + question1.peek_number());
+		questions_.erase(questions_.begin() + question2.peek_number() - 1);
+		add(grp, question1.peek_number());
+	}
+}
+
+int QuestionList::length() const {
+	return questions_.size();
 }
 

@@ -41,6 +41,10 @@ public:
 	Path increase_id();
 	Path decrease_id();
 
+	void setId(Path id) {
+		id_ = id;
+	}
+
 	QuestionType getType() const {
 		return type_;
 	}
