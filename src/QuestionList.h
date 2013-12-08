@@ -7,6 +7,7 @@
 #include "Question.h"
 #include <iostream>
 #include <fstream>
+#include <iterator>
 #include <uuid/uuid.h>
 #ifndef QUESTIONLIST_H_
 #define QUESTIONLIST_H_
@@ -29,13 +30,15 @@ public:
 	Path add(Question::QuestionType type, std::string& question_string, int min,
 			int max, int position);
 	Path add(Question::QuestionType type, std::string& question_string);
-	Path add(Question::QuestionType type, std::string& question_string, Path position);
+	Path add(Question::QuestionType type, std::string& question_string,
+			Path position);
 	Path add(Question * question);
 	Path add(Question * question, Path position);
 
 	void edit(Path& question_number, std::string& new_question_string);
 
-	void edit_choice(Path& question_number, std::string* new_answers, int amount);
+	void edit_choice(Path& question_number, std::string* new_answers,
+			int amount);
 
 	void delete_question(Path& question_number);
 
@@ -47,16 +50,36 @@ public:
 	//hulp
 	bool dirty;
 	bool in_range(Path& position) const;
-	bool can_be_added(Path& position);
 	std::string get_question_string(Path& index) const;
 	int amountOfQuestions() const;
 	Path getCurrentPath() const;
 	void setCurrentPath(Path currentPath);
 	int length() const;
 
+
+	//iterator
+	class QLiterator: public std::iterator<std::bidirectional_iterator_tag,
+			Question*> {
+	public:
+		QLiterator(QuestionList* ql);
+		QLiterator(QuestionList*ql, bool getEnd);
+		Question* operator*();
+		QLiterator& operator++();
+		QLiterator operator--();
+		bool operator==(const QLiterator& it) const;
+		bool operator!=(const QLiterator& it2);
+	private:
+		Path pos_;
+		QuestionList* ql_;
+		std::vector<Question*>::iterator cur_it_;
+	};
+
+	QLiterator begin();
+	QLiterator end();
+protected:
+	std::vector<Question*> questions_;
 private:
 	std::string filename_;
-	std::vector<Question*> questions_;
 	uuid_t uuid_;
 
 	Path current_path_;

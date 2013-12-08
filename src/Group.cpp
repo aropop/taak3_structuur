@@ -75,6 +75,26 @@ void Group::edit(Path& local_path, std::string& new_question_string) {
 	ql_.edit(local_path, new_question_string);
 }
 
+Path Group::increase_id() {
+	for(QuestionList::QLiterator it = ql_.begin();
+			it != ql_.end();
+			++it){
+		(*it)->increase_id();
+	}
+	return ++id_;
+}
+
+Path Group::decrease_id() {
+	for(QuestionList::QLiterator it = ql_.begin(); it != ql_.end(); ++it){
+		(*it)->increase_id();
+	}
+	return --id_;
+}
+
+QuestionList::QLiterator Group::getIterator() {
+	return ql_.begin();
+}
+
 Group::~Group() {
 	//will call the destructor of the questionlist so that will handle the correct deletion
 }

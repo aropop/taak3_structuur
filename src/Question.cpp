@@ -30,11 +30,17 @@ void Question::set_question_string(std::string& new_question) {
 
 //hulp functies voor het aanpassen van het id
 Path Question::increase_id() {
-	return ++id_;
+	int i (id_.pop_front_number());
+	++i;
+	id_.push_front_number(i);
+	return id_;
 }
 
 Path Question::decrease_id() {
-	return --id_;
+	int i (id_.pop_front_number());
+	--i;
+	id_.push_front_number(i);
+	return id_;
 }
 
 //zorgt voor een gemakkelijk output

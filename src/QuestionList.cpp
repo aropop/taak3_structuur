@@ -119,15 +119,7 @@ void QuestionList::save(std::ostream& out) const {
 //hulp functie die zegt of een bepaalde positie binnen het bereik ligt
 bool QuestionList::in_range(Path& position) const {
 	return ((0 < position.peek_front())
-			&& (position.peek_front() < (amountOfQuestions() + 1)));
-}
-
-//hulp functie bij het toevoegen
-bool QuestionList::can_be_added(Path& position) {
-	Path help_path(position);
-	int i(help_path.pop_front_number());
-	help_path.push_front_number(--i);
-	return in_range(help_path);
+			&& (position.peek_front() <= (amountOfQuestions() + 1)));
 }
 
 //geeft de question string door
@@ -141,11 +133,14 @@ std::string QuestionList::get_question_string(Path& index) const {
 }
 
 //edit commando voor question strings
-void QuestionList::edit(Path& question_number, std::string& new_question_string) {
+void QuestionList::edit(Path& question_number,
+		std::string& new_question_string) {
 	if (question_number.length() > 1) {
-		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number()))->edit(question_number, new_question_string);
+		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number()))->edit(
+				question_number, new_question_string);
 	} else {
-		questions_.at(question_number.peek_number())->set_question_string(new_question_string);
+		questions_.at(question_number.peek_number())->set_question_string(
+				new_question_string);
 		dirty = true;
 	}
 }
@@ -154,9 +149,11 @@ void QuestionList::edit(Path& question_number, std::string& new_question_string)
 void QuestionList::edit_choice(Path& question_number, std::string* new_answers,
 		int amount) {
 	if (question_number.length() > 1) {
-		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number()))->edit_choice(question_number, new_answers, amount);
+		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number()))->edit_choice(
+				question_number, new_answers, amount);
 	} else {
-		questions_.at(question_number.peek_number())->set_answers(new_answers, amount);
+		questions_.at(question_number.peek_number())->set_answers(new_answers,
+				amount);
 		dirty = true;
 	}
 }
@@ -310,7 +307,7 @@ Path QuestionList::add(Question* question) {
 }
 
 Path QuestionList::add(Question* question, Path position) {
-	if (!can_be_added(position)) {
+	if (!in_range(position)) {
 		throw std::string(
 				"Vraag kan niet worden toegevoegd niet binnen bereik");
 	}
@@ -322,9 +319,16 @@ Path QuestionList::add(Question* question, Path position) {
 	} else {
 		questions_.insert(questions_.begin() + position.peek_front() - 1,
 				question);
-		for (std::vector<Question*>::iterator it = questions_.begin()
-				+ position.peek_front(); it != questions_.end(); it++) {
-			(**it).increase_id();
+		if (question->getType() != Question::GROUP) {
+			for (std::vector<Question*>::iterator it = questions_.begin()
+					+ position.peek_front(); it != questions_.end(); it++) {
+				(**it).increase_id();
+			}
+		} else {
+			for (std::vector<Question*>::iterator it = questions_.begin()
+					+ position.peek_front(); it != questions_.end(); it++) {
+				(**it).decrease_id();
+			}
 		}
 	}
 	dirty = true;
@@ -372,16 +376,77 @@ void QuestionList::group(Path& question1, Path& question2,
 				question2, theme_string);
 	} else {
 		//do it on this level
+		//copy to bypass side effect
+		int end(question1.peek_front());
 		Group* grp = new Group(question1, theme_string,
-				questions_.at(question1.peek_number()),
-				questions_.at(question2.peek_number()));
-		questions_.erase(questions_.begin() + question1.peek_number());
-		questions_.erase(questions_.begin() + question2.peek_number() - 1);
-		add(grp, question1.peek_number());
+				questions_.at(question1.peek_number() - 1),
+				questions_.at(question2.peek_number() - 1));
+		questions_.erase(questions_.begin() + question1.peek_number() - 1);
+		questions_.erase(questions_.begin() + question2.peek_number() - 2);
+		add(grp, end);
 	}
 }
 
 int QuestionList::length() const {
 	return questions_.size();
+}
+
+QuestionList::QLiterator::QLiterator(QuestionList * ql) :
+		ql_(ql) {
+	cur_it_ = ql_->questions_.begin();
+	if ((*cur_it_)->getType() == Question::GROUP) {
+		cur_it_ = dynamic_cast<Group*>(*cur_it_)->getIterator().cur_it_;
+	}
+}
+QuestionList::QLiterator::QLiterator(QuestionList * ql, bool getEnd) :
+		ql_(ql) {
+	if (getEnd) {
+		cur_it_ = ql_->questions_.end();
+	} else {
+		cur_it_ = ql_->questions_.begin();
+		if ((*cur_it_)->getType() == Question::GROUP) {
+			cur_it_ = dynamic_cast<Group*>(*cur_it_)->getIterator().cur_it_;
+		}
+	}
+}
+
+Question* QuestionList::QLiterator::operator *() {
+	return *cur_it_;
+}
+
+QuestionList::QLiterator& QuestionList::QLiterator::operator ++() {
+	++cur_it_;
+	if (cur_it_ != ql_->questions_.end()) {
+		if ((*cur_it_)->getType() == Question::GROUP) {
+			cur_it_ = dynamic_cast<Group*>(*cur_it_)->getIterator().cur_it_;
+		}
+	}
+	return *this;
+}
+
+QuestionList::QLiterator QuestionList::QLiterator::operator --() {
+	--cur_it_;
+	if (cur_it_ != ql_->questions_.end()) {
+		if ((*cur_it_)->getType() == Question::GROUP) {
+			cur_it_ = dynamic_cast<Group*>(*cur_it_)->getIterator().cur_it_;
+		}
+	}
+	return *this;
+}
+
+bool QuestionList::QLiterator::operator ==(const QLiterator& it) const {
+	return cur_it_ == it.cur_it_;
+}
+
+QuestionList::QLiterator QuestionList::begin() {
+	return QLiterator(this);
+}
+
+QuestionList::QLiterator QuestionList::end() {
+	return QLiterator(this, true);
+}
+
+bool QuestionList::QLiterator::operator !=(const QLiterator& it1) {
+	return cur_it_ != it1.cur_it_;
 }
 
