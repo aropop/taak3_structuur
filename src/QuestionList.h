@@ -33,11 +33,11 @@ public:
 	Path add(Question * question);
 	Path add(Question * question, Path position);
 
-	void edit(int question_number, std::string& new_question_string);
+	void edit(Path& question_number, std::string& new_question_string);
 
-	void edit_choice(int question_number, std::string* new_answers, int amount);
+	void edit_choice(Path& question_number, std::string* new_answers, int amount);
 
-	void delete_question(int question_number);
+	void delete_question(Path& question_number);
 
 	void save();
 	void save(std::ostream& out) const;
@@ -46,8 +46,9 @@ public:
 
 	//hulp
 	bool dirty;
-	bool in_range(Path position);
-	std::string get_question_string(int index);
+	bool in_range(Path& position) const;
+	bool can_be_added(Path& position);
+	std::string get_question_string(Path& index) const;
 	int amountOfQuestions() const;
 	Path getCurrentPath() const;
 	void setCurrentPath(Path currentPath);

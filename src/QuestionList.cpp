@@ -117,27 +117,48 @@ void QuestionList::save(std::ostream& out) const {
 }
 
 //hulp functie die zegt of een bepaalde positie binnen het bereik ligt
-bool QuestionList::in_range(Path position) {
+bool QuestionList::in_range(Path& position) const {
 	return ((0 < position.peek_front())
 			&& (position.peek_front() < (amountOfQuestions() + 1)));
 }
 
+//hulp functie bij het toevoegen
+bool QuestionList::can_be_added(Path& position) {
+	Path help_path(position);
+	int i(help_path.pop_front_number());
+	help_path.push_front_number(--i);
+	return in_range(help_path);
+}
+
 //geeft de question string door
-std::string QuestionList::get_question_string(int index) {
-	return questions_.at(index)->question_string;
+std::string QuestionList::get_question_string(Path& index) const {
+	if (index.length() > 1) {
+		return dynamic_cast<Group*>(questions_.at(index.pop_front_number()))->get_question_string(
+				index);
+	} else {
+		return questions_.at(index.peek_number())->question_string;
+	}
 }
 
 //edit commando voor question strings
-void QuestionList::edit(int question_number, std::string& new_question_string) {
-	questions_.at(question_number)->set_question_string(new_question_string);
-	dirty = true;
+void QuestionList::edit(Path& question_number, std::string& new_question_string) {
+	if (question_number.length() > 1) {
+		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number()))->edit(question_number, new_question_string);
+	} else {
+		questions_.at(question_number.peek_number())->set_question_string(new_question_string);
+		dirty = true;
+	}
 }
 
 //edit commando voor choices
-void QuestionList::edit_choice(int question_number, std::string* new_answers,
+void QuestionList::edit_choice(Path& question_number, std::string* new_answers,
 		int amount) {
-	questions_.at(question_number)->set_answers(new_answers, amount);
-	dirty = true;
+	if (question_number.length() > 1) {
+		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number()))->edit_choice(question_number, new_answers, amount);
+	} else {
+		questions_.at(question_number.peek_number())->set_answers(new_answers, amount);
+		dirty = true;
+	}
 }
 
 //getter voor amount of questions
@@ -146,10 +167,15 @@ int QuestionList::amountOfQuestions() const {
 }
 
 //delete commando
-void QuestionList::delete_question(int question_number) {
-	//avoid memory leaks
-	delete questions_.at(question_number);
-	questions_.erase(questions_.begin() + question_number);
+void QuestionList::delete_question(Path& question_number) {
+	if (question_number.length() > 1) {
+		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number()))->delete_question(
+				question_number);
+	} else {
+		//avoid memory leaks
+		delete questions_.at(question_number.peek_number());
+		questions_.erase(questions_.begin() + question_number.peek_number());
+	}
 }
 
 //functie die het bestand uitleest en het object invult
@@ -284,11 +310,15 @@ Path QuestionList::add(Question* question) {
 }
 
 Path QuestionList::add(Question* question, Path position) {
+	if (!can_be_added(position)) {
+		throw std::string(
+				"Vraag kan niet worden toegevoegd niet binnen bereik");
+	}
 	if (position.length() > 1) {
 		int pos_on_this_level(position.pop_front_number());
 		dynamic_cast<Group*>(questions_.at(pos_on_this_level))->add(
 				questions_.at(pos_on_this_level), position);
-
+		position.push_front_number(pos_on_this_level);
 	} else {
 		questions_.insert(questions_.begin() + position.peek_front() - 1,
 				question);

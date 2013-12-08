@@ -31,7 +31,7 @@ private:
 	int current_amount_of_answers_;
 
 	std::string * prompt_for_choices();
-	std::string prompt_for_new_question_string(int index);
+	std::string prompt_for_new_question_string(Path& index);
 
 	void parse_dispatch();
 	bool prompt_save();

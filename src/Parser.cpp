@@ -142,13 +142,15 @@ void Parser::parse_dispatch() {
 		ss.ignore();
 		if ((ss.peek() >= '0') && (ss.peek() <= '9')) {
 			//edit de vraagtekst
-			int index;
+			Path index;
 			ss >> index;
 			//kijken binnen range
 			if (ql_->in_range(index)) {
 				std::string new_question_string =
-						prompt_for_new_question_string(index - 1);
-				ql_->edit(index - 1, new_question_string);
+						prompt_for_new_question_string(index);
+				--index;
+				ql_->edit(index, new_question_string);
+				++index;
 				*out_ << "Vraagtekst voor vraag " << index << " aangepast."
 						<< std::endl;
 			} else {
@@ -158,19 +160,20 @@ void Parser::parse_dispatch() {
 		} else {
 			//edit de choices
 			std::string ignore;
-			int index;
+			Path index;
 			ss >> ignore;
 			ss >> index;
 			if (ql_->in_range(index)) {
 				//answers vragen en choices aanpassen
-				*out_ << "Nieuwe antwoorden voor vraag " << index << " ("
-						<< ql_->get_question_string(index - 1) << ")"
-						<< std::endl;
+				*out_ << "Nieuwe antwoorden voor vraag " << index << " (";
+				--index;
+				*out_ << ql_->get_question_string(index) << ")" << std::endl;
 				std::string * answers = prompt_for_choices();
 				//edit zou een error kunnen throwen wanneer dit een choice is
 				try {
-					ql_->edit_choice(index - 1, answers,
-							current_amount_of_answers_); //-1 is het verschil tussen vraag nummer en index nummer
+					ql_->edit_choice(index, answers,
+							current_amount_of_answers_);
+					++index;
 					*out_ << "Antwoorden voor vraag " << index << " aangepast."
 							<< std::endl;
 				} catch (std::string& e) {
@@ -185,14 +188,15 @@ void Parser::parse_dispatch() {
 
 	} else if (command.compare("remove") == 0) {
 		//remove commando
-		int index;
+		Path index;
 		ss >> index;
 		//out of bounds
 		if (ql_->in_range(index)) {
 			//text vragen voor verwijderen
-			std::string text(ql_->get_question_string(index - 1));
-			ql_->delete_question(index - 1);
-			*out_ << "Vraag " << index << " (" << text << ") verwijderd."
+			--index;
+			std::string text(ql_->get_question_string(index));
+			ql_->delete_question(index);
+			*out_ << "Vraag " << ++index << " (" << text << ") verwijderd."
 					<< std::endl;
 		} else {
 			//error weergeven
@@ -207,9 +211,9 @@ void Parser::parse_dispatch() {
 		ss >> p2;
 		std::string theme_string;
 		getline(ss, theme_string);
-		try{
-		ql_->group(p1, p2, theme_string);
-		}catch(std::string& e){
+		try {
+			ql_->group(p1, p2, theme_string);
+		} catch (std::string& e) {
 			*out_ << e;
 		}
 	} else if (command.compare("exit") == 0) {
@@ -291,7 +295,7 @@ inline void Parser::reset_parser_code() {
 }
 
 //hulp functie die de nieuwe vraagtekst terug geeft
-std::string Parser::prompt_for_new_question_string(int index) {
+std::string Parser::prompt_for_new_question_string(Path& index) {
 	*out_ << "Nieuwe vraagtekst voor vraag " << index << " ("
 			<< ql_->get_question_string(index) << ")" << std::endl;
 	std::string new_question_string;

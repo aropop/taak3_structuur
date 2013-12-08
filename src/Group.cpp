@@ -59,6 +59,22 @@ Path Group::add(Question* question, Path& local_path) {
 	return id_.cons(ql_.add(question, local_path));
 }
 
+std::string Group::get_question_string(Path& local_path) const {
+	return ql_.get_question_string(local_path);
+}
+
+void Group::delete_question(Path& local_path) {
+	ql_.delete_question(local_path);
+}
+
+void Group::edit_choice(Path& local_path, std::string* answers, int amount) {
+	ql_.edit_choice(local_path, answers, amount);
+}
+
+void Group::edit(Path& local_path, std::string& new_question_string) {
+	ql_.edit(local_path, new_question_string);
+}
+
 Group::~Group() {
 	//will call the destructor of the questionlist so that will handle the correct deletion
 }
