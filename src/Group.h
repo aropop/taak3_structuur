@@ -14,7 +14,8 @@
 class Group: public Question {
 public:
 	Group();
-	Group(Path id, std::string& theme_string, Question * question1, Question * question2);
+	Group(Path& id, std::string& theme_string);
+	Group(Path& id, std::string& theme_string, Question * question1, Question * question2);
 
 	Path add(Question * question);
 	Path add(Question * question, Path& local_path);
@@ -27,10 +28,12 @@ public:
 	void group_questions(Path q1, Path q2, std::string& theme_string);
 	void ungroup(QuestionList& to_add);
 
-	virtual Path increase_id();
-	virtual Path decrease_id();
+	virtual Path increase_id(int level = 0);
+	virtual Path decrease_id(int level = 0);
 
-	QuestionList::QLiterator getIterator();
+	int amountOfQuestions() const;
+
+	QuestionList::QLiterator * getIterator();
 
 	std::string get_question_file_string() const;
 	std::string get_string() const;

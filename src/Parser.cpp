@@ -189,13 +189,18 @@ void Parser::parse_dispatch() {
 	} else if (command.compare("remove") == 0) {
 		//remove commando
 		Path index;
+		ss.ignore();
 		ss >> index;
 		//out of bounds
 		if (ql_->in_range(index)) {
 			//text vragen voor verwijderen
 			--index;
 			std::string text(ql_->get_question_string(index));
-			ql_->delete_question(index);
+			try {
+				ql_->delete_question(index);
+			} catch (std::string& e) {
+				*out_ << e << std::endl;
+			}
 			*out_ << "Vraag " << ++index << " (" << text << ") verwijderd."
 					<< std::endl;
 		} else {

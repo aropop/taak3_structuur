@@ -29,17 +29,34 @@ void Question::set_question_string(std::string& new_question) {
 }
 
 //hulp functies voor het aanpassen van het id
-Path Question::increase_id() {
+Path Question::increase_id(int level) {
+	Path store;
+	//store numbers on other levels
+	for(int j = 0; j < level; ++j){
+		store.push_number(id_.pop_front_number());
+	}
 	int i (id_.pop_front_number());
 	++i;
 	id_.push_front_number(i);
+	for(int j = 0; j < level; ++j){
+		id_.push_front_number(store.pop_number());
+	}
 	return id_;
 }
 
-Path Question::decrease_id() {
+
+Path Question::decrease_id(int level) {
+	Path store;
+	//store numbers on other levels
+	for(int j = 0; j < level; ++j){
+		store.push_number(id_.pop_front_number());
+	}
 	int i (id_.pop_front_number());
 	--i;
 	id_.push_front_number(i);
+	for(int j = 0; j < level; ++j){
+		id_.push_front_number(store.pop_number());
+	}
 	return id_;
 }
 

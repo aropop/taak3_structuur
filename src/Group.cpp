@@ -14,7 +14,7 @@ Group::Group() {
 
 }
 
-Group::Group(Path id, std::string& theme_string, Question* question1,
+Group::Group(Path& id, std::string& theme_string, Question* question1,
 		Question* question2) :
 		Question(id, theme_string) {
 	question1->setId(id.cons(Path(1)));
@@ -23,6 +23,11 @@ Group::Group(Path id, std::string& theme_string, Question* question1,
 	ql_.add(question2);
 	ql_.setCurrentPath(id_);
 	type_ = GROUP;
+}
+
+Group::Group(Path& id, std::string& theme_string) : Question(id, theme_string){
+	ql_.setCurrentPath(id_);
+	type_= GROUP;
 }
 
 Path Group::add(Question* question) {
@@ -42,7 +47,7 @@ std::string Group::get_question_file_string() const {
 	ss << id_.toString() << " " << Question::get_type_string(type_) << " "
 			<< ql_.length() << " " << question_string << std::endl;
 	ql_.save(ss);
-	return std::string(" ");
+	return ss.str();
 }
 
 std::string Group::get_string() const {
@@ -75,8 +80,8 @@ void Group::edit(Path& local_path, std::string& new_question_string) {
 	ql_.edit(local_path, new_question_string);
 }
 
-Path Group::increase_id() {
-	for(QuestionList::QLiterator it = ql_.begin();
+Path Group::increase_id(int level) {
+	for(QuestionList::QLiterator it = *(ql_.begin());
 			it != ql_.end();
 			++it){
 		(*it)->increase_id();
@@ -84,15 +89,19 @@ Path Group::increase_id() {
 	return ++id_;
 }
 
-Path Group::decrease_id() {
-	for(QuestionList::QLiterator it = ql_.begin(); it != ql_.end(); ++it){
-		(*it)->increase_id();
+Path Group::decrease_id(int level) {
+	for(QuestionList::QLiterator it = *(ql_.begin()); it != ql_.end(); ++it){
+		(*it)->decrease_id();
 	}
 	return --id_;
 }
 
-QuestionList::QLiterator Group::getIterator() {
+QuestionList::QLiterator * Group::getIterator() {
 	return ql_.begin();
+}
+
+int Group::amountOfQuestions() const {
+	return ql_.amountOfQuestions();
 }
 
 Group::~Group() {

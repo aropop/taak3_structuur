@@ -97,6 +97,11 @@ std::string uuid_to_string(char * character_array) {
 void QuestionList::save() {
 	//output file openen
 	std::fstream output_file(filename_.c_str(), std::ofstream::out);
+	char uuid_str[36];
+	uuid_unparse(uuid_, uuid_str);
+	//header wegschrijven
+	output_file << "VERSION 2" << std::endl << "ID " << uuid_to_string(uuid_str)
+			<< std::endl << "STEPS " << deepAmountOfQuestions() << std::endl;
 	save(output_file);
 	//ql is niet meer dirty want is juist weggeschreven
 	//moet alleen op toplevel gebeuren
@@ -104,11 +109,6 @@ void QuestionList::save() {
 }
 
 void QuestionList::save(std::ostream& out) const {
-	char uuid_str[36];
-	uuid_unparse(uuid_, uuid_str);
-	//header wegschrijven
-	out << "VERSION 2" << std::endl << "ID " << uuid_to_string(uuid_str)
-			<< std::endl << "STEPS " << amountOfQuestions() << std::endl;
 	//vragen wegschrijven
 	for (std::vector<Question *>::const_iterator i = questions_.begin();
 			i != questions_.end(); i++) {
@@ -166,12 +166,23 @@ int QuestionList::amountOfQuestions() const {
 //delete commando
 void QuestionList::delete_question(Path& question_number) {
 	if (question_number.length() > 1) {
-		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number()))->delete_question(
-				question_number);
+		Group* grp = dynamic_cast<Group*>(questions_.at(
+				question_number.peek_front()));
+		if (grp != NULL) {
+			grp->delete_question(question_number);
+		} else {
+			throw std::string(
+					"Kan de vraag niet verwijderen, het opgegeven pad is geen groep!");
+		}
 	} else {
 		//avoid memory leaks
 		delete questions_.at(question_number.peek_number());
 		questions_.erase(questions_.begin() + question_number.peek_number());
+		for (std::vector<Question*>::iterator it = questions_.begin()
+				+ question_number.peek_front(); it != questions_.end(); it++) {
+			//group neemt altijd 2 vragen dus de vragen erna moeten met 1 verlaagt worden
+			(**it).decrease_id(current_path_.length());
+		}
 	}
 }
 
@@ -211,7 +222,7 @@ void QuestionList::read_from_file(std::ifstream * input_file) {
 				ss.clear();
 				ss.str(current_line);
 
-				int question_number;
+				Path question_number;
 				std::string question_string, question_type;
 
 				ss >> question_number;
@@ -234,9 +245,9 @@ void QuestionList::read_from_file(std::ifstream * input_file) {
 					}
 					//maak de vraag aan
 					ChoiceQuestion * current_question = new ChoiceQuestion(
-							Path(question_number), question_string, answers,
+							question_number, question_string, answers,
 							amount_of_answers);
-					questions_.push_back(current_question);
+					add(current_question, question_number);
 					//scope zal de current_question destructen maar we hebben ze gekopieerd naar het geheugen
 					current_question->copied = true;
 				} else if (question_type.compare(
@@ -247,7 +258,7 @@ void QuestionList::read_from_file(std::ifstream * input_file) {
 					Question* current_question = new Question(question_number,
 							question_string);
 
-					questions_.push_back(current_question);
+					add(current_question, question_number);
 
 					ss.clear();
 
@@ -256,8 +267,8 @@ void QuestionList::read_from_file(std::ifstream * input_file) {
 					ss.ignore();
 					getline(ss, question_string);
 					Question* current_question = new BoolQuestion(
-							Path(question_number), question_string);
-					questions_.push_back(current_question);
+							question_number, question_string);
+					add(current_question, question_number);
 					ss.clear();
 
 				} else if (question_type.compare(
@@ -268,9 +279,20 @@ void QuestionList::read_from_file(std::ifstream * input_file) {
 					ss.ignore();
 					getline(ss, question_string);
 					Question* current_question = new ScaleQuestion(
-							Path(question_number), question_string, min, max);
-					questions_.push_back(current_question);
+							question_number, question_string, min, max);
+					add(current_question, question_number);
 					ss.clear();
+				} else if (question_type.compare(
+						Question::get_type_string(Question::GROUP)) == 0) {
+					int amount;
+					ss >> amount;
+					ss.ignore();
+					getline(ss, question_string);
+					Question * current_question = new Group(question_number,
+							question_string);
+					add(current_question, question_number);
+					ss.clear();
+					counter--; //moet niet opgehoogd worden wanneer je een group leest
 				} else {
 					//kent het question type niet
 					throw std::string("Unknown question type");
@@ -312,22 +334,29 @@ Path QuestionList::add(Question* question, Path position) {
 				"Vraag kan niet worden toegevoegd niet binnen bereik");
 	}
 	if (position.length() > 1) {
-		int pos_on_this_level(position.pop_front_number());
-		dynamic_cast<Group*>(questions_.at(pos_on_this_level))->add(
-				questions_.at(pos_on_this_level), position);
-		position.push_front_number(pos_on_this_level);
+		int pos_on_this_level(position.pop_front_number() - 1);
+		Group* grp(dynamic_cast<Group*>(questions_.at(pos_on_this_level)));
+		if (grp != NULL) { //test of het wel een groep is
+			grp->add(question, position);
+			//push to get right number to print
+			position.push_front_number(pos_on_this_level);
+		} else {
+			throw std::string(
+					"De positie waarop je wilt toevoegen is geen groep!");
+		}
 	} else {
 		questions_.insert(questions_.begin() + position.peek_front() - 1,
 				question);
 		if (question->getType() != Question::GROUP) {
 			for (std::vector<Question*>::iterator it = questions_.begin()
 					+ position.peek_front(); it != questions_.end(); it++) {
-				(**it).increase_id();
+				(**it).increase_id(current_path_.length());
 			}
 		} else {
 			for (std::vector<Question*>::iterator it = questions_.begin()
 					+ position.peek_front(); it != questions_.end(); it++) {
-				(**it).decrease_id();
+				//group neemt altijd 2 vragen dus de vragen erna moeten met 1 verlaagt worden
+				(**it).decrease_id(current_path_.length());
 			}
 		}
 	}
@@ -392,54 +421,91 @@ int QuestionList::length() const {
 }
 
 QuestionList::QLiterator::QLiterator(QuestionList * ql) :
-		ql_(ql) {
+		ql_(ql), deep_(false), ended_(false) {
 	cur_it_ = ql_->questions_.begin();
 	if ((*cur_it_)->getType() == Question::GROUP) {
-		cur_it_ = dynamic_cast<Group*>(*cur_it_)->getIterator().cur_it_;
+		deep_ = true;
+		deep_iterator_ = dynamic_cast<Group*>(*cur_it_)->getIterator();
 	}
 }
 QuestionList::QLiterator::QLiterator(QuestionList * ql, bool getEnd) :
-		ql_(ql) {
+		ql_(ql), deep_(false), ended_(false) {
 	if (getEnd) {
 		cur_it_ = ql_->questions_.end();
 	} else {
 		cur_it_ = ql_->questions_.begin();
 		if ((*cur_it_)->getType() == Question::GROUP) {
-			cur_it_ = dynamic_cast<Group*>(*cur_it_)->getIterator().cur_it_;
+			deep_ = true;
+			deep_iterator_ = dynamic_cast<Group*>(*cur_it_)->getIterator();
 		}
 	}
 }
 
 Question* QuestionList::QLiterator::operator *() {
-	return *cur_it_;
+	if (deep_) {
+		return **deep_iterator_;
+	} else {
+		return *cur_it_;
+	}
 }
 
 QuestionList::QLiterator& QuestionList::QLiterator::operator ++() {
-	++cur_it_;
-	if (cur_it_ != ql_->questions_.end()) {
-		if ((*cur_it_)->getType() == Question::GROUP) {
-			cur_it_ = dynamic_cast<Group*>(*cur_it_)->getIterator().cur_it_;
+	if (!deep_) {
+		//we can do this on this level
+		++cur_it_;
+		if (*this == ql_->end()) {
+			ended_ = true; //let upper level know we are done here
+		} else if ((*cur_it_)->getType() == Question::GROUP) {
+			//jump deeper
+			deep_iterator_ = dynamic_cast<Group*>(*cur_it_)->getIterator();
+			deep_ = true;
+		}
+	} else {
+		//pass the message to a level deeper
+		++(*deep_iterator_);
+		if (deep_iterator_->ended()) {
+			//level is done so we jump back up
+			deep_ = false;
+			operator ++();
 		}
 	}
 	return *this;
 }
 
 QuestionList::QLiterator QuestionList::QLiterator::operator --() {
-	--cur_it_;
-	if (cur_it_ != ql_->questions_.end()) {
-		if ((*cur_it_)->getType() == Question::GROUP) {
-			cur_it_ = dynamic_cast<Group*>(*cur_it_)->getIterator().cur_it_;
+	if (!deep_) {
+		//we can do this on this level
+		--cur_it_;
+		if (*this == ql_->end()) {
+			ended_ = true; //let upper level know we are done here
+		} else if ((*cur_it_)->getType() == Question::GROUP) {
+			//jump deeper
+			deep_iterator_ = dynamic_cast<Group*>(*cur_it_)->getIterator();
+			deep_ = true;
+		}
+	} else {
+		//pass the message to a level deeper
+		--(*deep_iterator_);
+		if (deep_iterator_->ended()) {
+			//level is done so we jump back up
+			deep_ = false;
+			operator --();
 		}
 	}
 	return *this;
+
 }
 
 bool QuestionList::QLiterator::operator ==(const QLiterator& it) const {
-	return cur_it_ == it.cur_it_;
+	if (deep_) {
+		return (*deep_iterator_) == it;
+	} else {
+		return cur_it_ == it.cur_it_;
+	}
 }
 
-QuestionList::QLiterator QuestionList::begin() {
-	return QLiterator(this);
+QuestionList::QLiterator * QuestionList::begin() {
+	return new QLiterator(this);
 }
 
 QuestionList::QLiterator QuestionList::end() {
@@ -447,6 +513,21 @@ QuestionList::QLiterator QuestionList::end() {
 }
 
 bool QuestionList::QLiterator::operator !=(const QLiterator& it1) {
-	return cur_it_ != it1.cur_it_;
+	if (deep_) {
+		return (*deep_iterator_) != it1;
+	} else {
+		return cur_it_ != it1.cur_it_;
+	}
+}
+
+int QuestionList::deepAmountOfQuestions() {
+	int i(0);
+	for (QLiterator it = *(begin()); it != end(); ++it) {
+		i++;
+	}
+	return i;
+}
+
+QuestionList::QLiterator::QLiterator() {
 }
 

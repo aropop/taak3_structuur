@@ -38,8 +38,8 @@ public:
 
 	static std::string get_type_string(QuestionType type);
 
-	virtual Path increase_id();
-	virtual Path decrease_id();
+	virtual Path increase_id(int level = 0);
+	virtual Path decrease_id(int level = 0);
 
 	void setId(Path id) {
 		id_ = id;

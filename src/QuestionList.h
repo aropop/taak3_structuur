@@ -52,15 +52,16 @@ public:
 	bool in_range(Path& position) const;
 	std::string get_question_string(Path& index) const;
 	int amountOfQuestions() const;
+	int deepAmountOfQuestions();
 	Path getCurrentPath() const;
 	void setCurrentPath(Path currentPath);
 	int length() const;
-
 
 	//iterator
 	class QLiterator: public std::iterator<std::bidirectional_iterator_tag,
 			Question*> {
 	public:
+		QLiterator();
 		QLiterator(QuestionList* ql);
 		QLiterator(QuestionList*ql, bool getEnd);
 		Question* operator*();
@@ -68,13 +69,19 @@ public:
 		QLiterator operator--();
 		bool operator==(const QLiterator& it) const;
 		bool operator!=(const QLiterator& it2);
+		bool ended() const {
+			return ended_;
+		}
 	private:
 		Path pos_;
 		QuestionList* ql_;
+		bool deep_; //determines if we are a level deeper
+		bool ended_;
 		std::vector<Question*>::iterator cur_it_;
+		QLiterator* deep_iterator_;
 	};
 
-	QLiterator begin();
+	QLiterator * begin();
 	QLiterator end();
 protected:
 	std::vector<Question*> questions_;

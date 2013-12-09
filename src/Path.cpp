@@ -67,7 +67,7 @@ std::ostream& operator <<(std::ostream& out, Path p) {
 Path Path::cons(Path to_cons) {
 	Path ret(*this);
 	while (!to_cons.at_end()) {
-		ret.push_number(to_cons.pop_number());
+		ret.push_number(to_cons.pop_front_number());
 	}
 	return ret;
 }
@@ -104,7 +104,7 @@ std::istream& operator>>(std::istream& in, Path &p) {
 		cur = in.get();
 	}
 	bool last(false); //true is a number, false is a dot
-	while ((cur != ' ') && (cur != '\n')) {
+	while ((cur != ' ') && (cur != '\n') && !in.eof()) {
 		if (last) {
 			if (cur == '.') { //skip and jump to next
 				cur = in.get();
