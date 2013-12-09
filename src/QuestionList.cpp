@@ -401,13 +401,19 @@ void QuestionList::group(Path& question1, Path& question2,
 		//pass through to lower level
 		int group(question1.pop_front_number());
 		question2.pop_front_number();
-		dynamic_cast<Group*>((questions_.at(group)))->group_questions(question1,
-				question2, theme_string);
+		Group* grp(dynamic_cast<Group*>(questions_.at(group - 1)));
+		if (grp != NULL) {
+			grp->group_questions(question1, question2, theme_string);
+		} else {
+			throw std::string("Gegeven pad is klopt niet");
+		}
 	} else {
 		//do it on this level
 		//copy to bypass side effect
 		int end(question1.peek_front());
-		Group* grp = new Group(question1, theme_string,
+		Path group_path(question1);
+		Path r (current_path_.cons(group_path));
+		Group* grp = new Group(r, theme_string,
 				questions_.at(question1.peek_number() - 1),
 				questions_.at(question2.peek_number() - 1));
 		questions_.erase(questions_.begin() + question1.peek_number() - 1);
