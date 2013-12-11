@@ -51,7 +51,17 @@ void Parser::parse_dispatch() {
 	} else if (command.compare("add") == 0) {
 		//add commando
 		std::string question_type, question;
-		Path index(0);
+		Path index(ql_->amountOfQuestions() + 1);
+		getToNextChar(ss);
+		if (ss.peek() >= '0' && ss.peek() <= '9') {
+			ss >> index;
+			try {
+				index.push_number(ql_->amountOfQuestions(index) + 1); //achteraan toevoegen
+			} catch (std::string& e) {
+				*out_ << e << std::endl; //niet geldig pad
+			}
+		}
+		Path print_path(index); //make a copy to be sure the reference functions don't edit it
 		ss >> question_type;
 		ss.ignore();
 		getline(ss, question);
@@ -62,20 +72,20 @@ void Parser::parse_dispatch() {
 			std::string * answers = prompt_for_choices();
 			//nieuwe toevoegen geeft de index terug
 			index = ql_->add(Question::CHOICE, question, answers,
-					current_amount_of_answers_);
-			print_add_text(question, index);
+					current_amount_of_answers_, index);
+			print_add_text(question, print_path);
 		} else if (question_type.compare(
 				Question::get_type_string(Question::TEXT)) == 0) {
 
 			//nieuwe toevoegen en commando afronden
-			index = ql_->add(Question::TEXT, question);
-			print_add_text(question, index);
+			index = ql_->add(Question::TEXT, question, index);
+			print_add_text(question, print_path);
 		} else if (question_type.compare(
 				Question::get_type_string(Question::BOOL)) == 0) {
 
 			//nieuwe toevoegen en commando afronden
-			index = ql_->add(Question::BOOL, question);
-			print_add_text(question, index);
+			index = ql_->add(Question::BOOL, question, index);
+			print_add_text(question, print_path);
 		} else if (question_type.compare(
 				Question::get_type_string(Question::SCALE)) == 0) {
 			//nieuwe toevoegen en commando afronden
@@ -83,8 +93,8 @@ void Parser::parse_dispatch() {
 			*in_ >> min;
 			*in_ >> max;
 			in_->ignore();
-			index = ql_->add(Question::SCALE, question, min, max);
-			print_add_text(question, index);
+			index = ql_->add(Question::SCALE, question, min, max, index);
+			print_add_text(question, print_path);
 		} else {
 			//ongekend vraag type
 			*out_ << "Niet gekend vraag type: " << question_type << std::endl;
@@ -321,5 +331,11 @@ const inline void Parser::print_add_text(std::string& question, Path position) {
 inline const void Parser::print_out_of_bounds(Path index) {
 	*out_ << "Ongeldige invoer (" << index.toString() << "), N="
 			<< ql_->amountOfQuestions() << std::endl;
+}
+
+void Parser::getToNextChar(std::stringstream& ss) {
+	while (ss.peek() == ' ') {
+		ss.ignore();
+	}
 }
 

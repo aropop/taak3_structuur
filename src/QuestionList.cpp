@@ -318,9 +318,9 @@ Path QuestionList::add(Question::QuestionType type,
 }
 
 Path QuestionList::add(Question::QuestionType type,
-		std::string& question_string, int min, int max, int position) {
+		std::string& question_string, int min, int max, Path position) {
 	return add(
-			new ScaleQuestion(current_path_.cons(Path(position)),
+			new ScaleQuestion(current_path_.cons(position),
 					question_string, min, max), position);
 }
 
@@ -536,4 +536,19 @@ int QuestionList::deepAmountOfQuestions() {
 
 QuestionList::QLiterator::QLiterator() {
 }
+
+int QuestionList::amountOfQuestions(Path p) const {
+	if(p.length() > 0){
+		Group* grp(dynamic_cast<Group*>(questions_.at(p.pop_front_number() - 1)));
+		if(grp != NULL){
+			return grp->amountOfQuestions(p);
+		}else{
+
+			throw std::string("Geen geldig pad opgegeven!");
+		}
+	}else{
+		return amountOfQuestions();
+	}
+}
+
 

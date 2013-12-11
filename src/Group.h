@@ -31,7 +31,10 @@ public:
 	virtual Path increase_id(int level = 0);
 	virtual Path decrease_id(int level = 0);
 
+	bool empty() const;
+
 	int amountOfQuestions() const;
+	int amountOfQuestions(Path& p) const;
 
 	QuestionList::QLiterator * getIterator();
 

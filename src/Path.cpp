@@ -64,6 +64,12 @@ std::ostream& operator <<(std::ostream& out, Path p) {
 	return out;
 }
 
+void Path::clear() {
+	while(!empty()){
+		numbers_.pop_back();
+	}
+}
+
 Path Path::cons(Path to_cons) {
 	Path ret(*this);
 	while (!to_cons.at_end()) {
@@ -100,6 +106,7 @@ int Path::pop_front_number() {
 std::istream& operator>>(std::istream& in, Path &p) {
 	char cur;
 	cur = in.get();
+	p.clear();
 	while(cur == ' '){ //read till you find something else than " "
 		cur = in.get();
 	}

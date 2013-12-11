@@ -28,7 +28,7 @@ public:
 	Path add(Question::QuestionType type, std::string& question_string, int min,
 			int max);
 	Path add(Question::QuestionType type, std::string& question_string, int min,
-			int max, int position);
+			int max, Path position);
 	Path add(Question::QuestionType type, std::string& question_string);
 	Path add(Question::QuestionType type, std::string& question_string,
 			Path position);
@@ -52,6 +52,7 @@ public:
 	bool in_range(Path& position) const;
 	std::string get_question_string(Path& index) const;
 	int amountOfQuestions() const;
+	int amountOfQuestions(Path p) const;
 	int deepAmountOfQuestions();
 	Path getCurrentPath() const;
 	void setCurrentPath(Path currentPath);

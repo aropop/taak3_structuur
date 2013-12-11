@@ -104,6 +104,14 @@ int Group::amountOfQuestions() const {
 	return ql_.amountOfQuestions();
 }
 
+bool Group::empty() const {
+	return ql_.amountOfQuestions() == 0;
+}
+
+int Group::amountOfQuestions(Path& p) const {
+	return ql_.amountOfQuestions(p);
+}
+
 Group::~Group() {
 	//will call the destructor of the questionlist so that will handle the correct deletion
 }

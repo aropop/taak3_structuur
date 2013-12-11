@@ -36,6 +36,8 @@ private:
 	void parse_dispatch();
 	bool prompt_save();
 
+	void getToNextChar(std::stringstream& ss);
+
 	inline void reset_parser_code();
 
 	const inline void print_add_text(std::string& question, Path position);
