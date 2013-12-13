@@ -33,6 +33,7 @@ public:
 
 	virtual std::string get_question_file_string() const;
 	virtual std::string get_string() const;
+	virtual std::string get_string(int spacing) const;
 
 	virtual void set_answers(std::string * answers, int amount);
 
@@ -40,6 +41,10 @@ public:
 
 	virtual Path increase_id(int level = 0);
 	virtual Path decrease_id(int level = 0);
+
+	Path getId() const {
+		return id_;
+	}
 
 	void setId(Path id) {
 		id_ = id;

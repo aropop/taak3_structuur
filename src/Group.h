@@ -27,6 +27,7 @@ public:
 
 	void group_questions(Path q1, Path q2, std::string& theme_string);
 	void ungroup(QuestionList& to_add);
+	void ungroup_deep(Path& p);
 
 	virtual Path increase_id(int level = 0);
 	virtual Path decrease_id(int level = 0);
@@ -40,6 +41,7 @@ public:
 
 	std::string get_question_file_string() const;
 	std::string get_string() const;
+	std::string get_string(int level) const;
 	std::string get_question_string(Path& local_path) const;
 	~Group();
 

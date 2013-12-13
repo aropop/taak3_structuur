@@ -51,11 +51,11 @@ QuestionList::~QuestionList(void) {
 }
 
 //list commando
-void QuestionList::list(std::ostream * out) const {
+void QuestionList::list(std::ostream * out, int level) const {
 	//over vragen lopen en ze uitprinten
 	for (std::vector<Question*>::const_iterator i = questions_.begin();
 			i != questions_.end(); ++i) {
-		*out << **i;
+		*out << (**i).get_string(level);
 	}
 }
 
@@ -109,10 +109,14 @@ void QuestionList::save() {
 }
 
 void QuestionList::save(std::ostream& out) const {
-	//vragen wegschrijven
-	for (std::vector<Question *>::const_iterator i = questions_.begin();
-			i != questions_.end(); i++) {
-		out << (**i).get_question_file_string();
+	if (amountOfQuestions() == 0) {
+		throw std::string("Lege groep kan niet opslaan!");
+	} else {
+		//vragen wegschrijven
+		for (std::vector<Question *>::const_iterator i = questions_.begin();
+				i != questions_.end(); i++) {
+			out << (**i).get_question_file_string();
+		}
 	}
 }
 
@@ -180,7 +184,6 @@ void QuestionList::delete_question(Path& question_number) {
 		questions_.erase(questions_.begin() + question_number.peek_number());
 		for (std::vector<Question*>::iterator it = questions_.begin()
 				+ question_number.peek_front(); it != questions_.end(); it++) {
-			//group neemt altijd 2 vragen dus de vragen erna moeten met 1 verlaagt worden
 			(**it).decrease_id(current_path_.length());
 		}
 	}
@@ -320,8 +323,8 @@ Path QuestionList::add(Question::QuestionType type,
 Path QuestionList::add(Question::QuestionType type,
 		std::string& question_string, int min, int max, Path position) {
 	return add(
-			new ScaleQuestion(current_path_.cons(position),
-					question_string, min, max), position);
+			new ScaleQuestion(current_path_.cons(position), question_string,
+					min, max), position);
 }
 
 Path QuestionList::add(Question* question) {
@@ -347,6 +350,8 @@ Path QuestionList::add(Question* question, Path position) {
 	} else {
 		questions_.insert(questions_.begin() + position.peek_front() - 1,
 				question);
+		int num (position.peek_front());
+		question->setId(current_path_.cons(Path(num)));
 		if (question->getType() != Question::GROUP) {
 			for (std::vector<Question*>::iterator it = questions_.begin()
 					+ position.peek_front(); it != questions_.end(); it++) {
@@ -412,7 +417,7 @@ void QuestionList::group(Path& question1, Path& question2,
 		//copy to bypass side effect
 		int end(question1.peek_front());
 		Path group_path(question1);
-		Path r (current_path_.cons(group_path));
+		Path r(current_path_.cons(group_path));
 		Group* grp = new Group(r, theme_string,
 				questions_.at(question1.peek_number() - 1),
 				questions_.at(question2.peek_number() - 1));
@@ -486,7 +491,7 @@ QuestionList::QLiterator QuestionList::QLiterator::operator --() {
 			ended_ = true; //let upper level know we are done here
 		} else if ((*cur_it_)->getType() == Question::GROUP) {
 			//jump deeper
-			deep_iterator_ = dynamic_cast<Group*>(*cur_it_)->getIterator();
+			deep_iterator_ = static_cast<Group*>(*cur_it_)->getIterator();
 			deep_ = true;
 		}
 	} else {
@@ -538,17 +543,49 @@ QuestionList::QLiterator::QLiterator() {
 }
 
 int QuestionList::amountOfQuestions(Path p) const {
-	if(p.length() > 0){
-		Group* grp(dynamic_cast<Group*>(questions_.at(p.pop_front_number() - 1)));
-		if(grp != NULL){
+	if (p.length() > 0) {
+		Group* grp(
+				dynamic_cast<Group*>(questions_.at(p.pop_front_number() - 1)));
+		if (grp != NULL) {
 			return grp->amountOfQuestions(p);
-		}else{
+		} else {
 
 			throw std::string("Geen geldig pad opgegeven!");
 		}
-	}else{
+	} else {
 		return amountOfQuestions();
 	}
 }
 
+void QuestionList::decrease_ids() {
+	//moet hier met en vector omdat je anders de id's van de groepen niet mee updatet
+	for (std::vector<Question*>::iterator it = questions_.begin();
+			it != questions_.end(); it++) {
+		(**it).decrease_id();
+	}
+
+}
+
+void QuestionList::copy_to_other_ql(QuestionList& to_add) {
+	for (std::vector<Question*>::reverse_iterator it = questions_.rbegin();
+			it != questions_.rend(); it++) {
+		to_add.add(*it, Path(current_path_.peek_number()));
+	}
+	questions_.clear();
+}
+
+void QuestionList::ungroup(Path& p) {
+	Question * q(questions_.at(p.peek_front() - 1));
+	if (q->getType() == Question::GROUP) {
+			Group* g(static_cast<Group*>(q));
+		if (p.length() > 1) {
+			p.pop_front_number();
+			g->ungroup_deep(p);
+		} else {
+			g->ungroup(*this);
+		}
+	} else {
+		throw std::string("Het opgegeven pad is geen groep");
+	}
+}
 

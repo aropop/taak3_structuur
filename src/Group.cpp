@@ -25,9 +25,10 @@ Group::Group(Path& id, std::string& theme_string, Question* question1,
 	type_ = GROUP;
 }
 
-Group::Group(Path& id, std::string& theme_string) : Question(id, theme_string){
+Group::Group(Path& id, std::string& theme_string) :
+		Question(id, theme_string) {
 	ql_.setCurrentPath(id_);
-	type_= GROUP;
+	type_ = GROUP;
 }
 
 Path Group::add(Question* question) {
@@ -35,7 +36,7 @@ Path Group::add(Question* question) {
 }
 
 void Group::ungroup(QuestionList& to_add) {
-	//TODO implement
+	ql_.copy_to_other_ql(to_add);
 }
 
 void Group::group_questions(Path q1, Path q2, std::string& theme_string) {
@@ -81,19 +82,15 @@ void Group::edit(Path& local_path, std::string& new_question_string) {
 }
 
 Path Group::increase_id(int level) {
-	for(QuestionList::QLiterator it = *(ql_.begin());
-			it != ql_.end();
-			++it){
+	for (QuestionList::QLiterator it = *(ql_.begin()); it != ql_.end(); ++it) {
 		(*it)->increase_id();
 	}
-	return ++id_;
+	return Question::increase_id(level);
 }
 
 Path Group::decrease_id(int level) {
-	for(QuestionList::QLiterator it = *(ql_.begin()); it != ql_.end(); ++it){
-		(*it)->decrease_id();
-	}
-	return --id_;
+	ql_.decrease_ids();
+	return Question::decrease_id(level);
 }
 
 QuestionList::QLiterator * Group::getIterator() {
@@ -110,6 +107,21 @@ bool Group::empty() const {
 
 int Group::amountOfQuestions(Path& p) const {
 	return ql_.amountOfQuestions(p);
+}
+
+std::string Group::get_string(int level) const {
+	std::stringstream ss;
+	for (int i = 0; i < level; ++i) {
+		ss << "     ";
+	}
+	ss << id_.toString() << " " << Question::get_type_string(type_) << " "
+			<< question_string << std::endl;
+	ql_.list(&ss, level + 1);
+	return ss.str();
+}
+
+void Group::ungroup_deep(Path& p) {
+	ql_.ungroup(p);
 }
 
 Group::~Group() {

@@ -75,6 +75,14 @@ std::string Question::get_string() const {
 	ss << id_.toString() << " " << Question::get_type_string(type_) << " " << question_string << std::endl;
 	return ss.str();
 }
+std::string Question::get_string(int spacing) const {
+	std::stringstream ss;
+	for (int i = 0; i < spacing; ++i) {
+		ss << "     ";
+	}
+	ss << get_string();
+	return ss.str();
+}
 
 void Question::set_answers(std::string * answers, int amount) {
 	throw std::string("Kan geen antwoorden toevoegen voor dit soort vraag!");
@@ -101,4 +109,6 @@ std::string Question::get_type_string(Question::QuestionType type) {
 	}
 	return return_string;
 }
+
+
 

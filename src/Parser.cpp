@@ -137,7 +137,7 @@ void Parser::parse_dispatch() {
 				*in_ >> min;
 				*in_ >> max;
 				in_->ignore();
-				ql_->add(Question::SCALE, question, min, max);
+				ql_->add(Question::SCALE, question, min, max, position);
 				print_add_text(question, position);
 			} else {
 				//onbekend type
@@ -231,6 +231,15 @@ void Parser::parse_dispatch() {
 		} catch (std::string& e) {
 			*out_ << e;
 		}
+	}else if (command.compare("ungroup") == 0) {
+		ss.ignore();
+		Path p1;
+		ss >> p1;
+		try {
+			ql_->ungroup(p1);
+		} catch (std::string& e) {
+			*out_ << e << std::endl;
+		}
 	} else if (command.compare("exit") == 0) {
 		//exit commando
 		//alleen vragen voor een save als er aanpassing zijn
@@ -244,9 +253,15 @@ void Parser::parse_dispatch() {
 	} else if (command.compare("save") == 0) {
 		//save commando
 		if (ql_->dirty) {
-			ql_->save();
+			try {
+				ql_->save();
+				*out_ << "Bestand bewaard." << std::endl;
+			} catch (std::string& e) {
+				*out_ << e << std::endl;
+			}
+		} else {
+			*out_ << "Bestand bewaard." << std::endl;
 		}
-		*out_ << "Bestand bewaard." << std::endl;
 	} else {
 		//verkeerde message
 		parser_code_ = WRONG_MESSAGE;

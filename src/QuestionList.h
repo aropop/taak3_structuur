@@ -19,7 +19,7 @@ public:
 	~QuestionList();
 
 	//commando's
-	void list(std::ostream * out) const;
+	void list(std::ostream * out, int level=0) const;
 
 	Path add(Question::QuestionType type, std::string& question_string,
 			std::string *answers, int amount_of_answers);
@@ -47,6 +47,8 @@ public:
 
 	void group(Path& question1, Path& question2, std::string& theme_string);
 
+	void ungroup(Path& p);
+
 	//hulp
 	bool dirty;
 	bool in_range(Path& position) const;
@@ -57,6 +59,9 @@ public:
 	Path getCurrentPath() const;
 	void setCurrentPath(Path currentPath);
 	int length() const;
+	void decrease_ids();
+
+	void copy_to_other_ql(QuestionList& to_add);
 
 	//iterator
 	class QLiterator: public std::iterator<std::bidirectional_iterator_tag,
