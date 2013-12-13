@@ -41,6 +41,7 @@ public:
 			int amount);
 
 	void delete_question(Path& question_number);
+	void delete_pointer(Path& path);
 
 	void save();
 	void save(std::ostream& out) const;

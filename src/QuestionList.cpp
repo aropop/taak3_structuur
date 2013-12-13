@@ -350,7 +350,7 @@ Path QuestionList::add(Question* question, Path position) {
 	} else {
 		questions_.insert(questions_.begin() + position.peek_front() - 1,
 				question);
-		int num (position.peek_front());
+		int num(position.peek_front());
 		question->setId(current_path_.cons(Path(num)));
 		if (question->getType() != Question::GROUP) {
 			for (std::vector<Question*>::iterator it = questions_.begin()
@@ -567,6 +567,8 @@ void QuestionList::decrease_ids() {
 }
 
 void QuestionList::copy_to_other_ql(QuestionList& to_add) {
+	Path path_in_above(current_path_.peek_number());
+	to_add.delete_pointer(path_in_above);
 	for (std::vector<Question*>::reverse_iterator it = questions_.rbegin();
 			it != questions_.rend(); it++) {
 		to_add.add(*it, Path(current_path_.peek_number()));
@@ -577,7 +579,7 @@ void QuestionList::copy_to_other_ql(QuestionList& to_add) {
 void QuestionList::ungroup(Path& p) {
 	Question * q(questions_.at(p.peek_front() - 1));
 	if (q->getType() == Question::GROUP) {
-			Group* g(static_cast<Group*>(q));
+		Group* g(static_cast<Group*>(q));
 		if (p.length() > 1) {
 			p.pop_front_number();
 			g->ungroup_deep(p);
@@ -586,6 +588,25 @@ void QuestionList::ungroup(Path& p) {
 		}
 	} else {
 		throw std::string("Het opgegeven pad is geen groep");
+	}
+}
+
+void QuestionList::delete_pointer(Path& path) {
+	//does the same as delete_question without deleting the question object from the heap
+	if (path.length() > 1) {
+		Group* grp = dynamic_cast<Group*>(questions_.at(path.peek_front()));
+		if (grp != NULL) {
+			grp->delete_question(path);
+		} else {
+			throw std::string(
+					"Kan de vraag niet verwijderen, het opgegeven pad is geen groep!");
+		}
+	} else {
+		questions_.erase(questions_.begin() + path.peek_number() - 1);
+		for (std::vector<Question*>::iterator it = questions_.begin()
+				+ path.peek_front(); it != questions_.end(); it++) {
+			(**it).decrease_id(current_path_.length());
+		}
 	}
 }
 
