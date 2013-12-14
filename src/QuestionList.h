@@ -61,6 +61,7 @@ public:
 	void setCurrentPath(Path currentPath);
 	int length() const;
 	void decrease_ids();
+	void increase_ids();
 
 	void copy_to_other_ql(QuestionList& to_add);
 

@@ -17,11 +17,9 @@ Group::Group() {
 Group::Group(Path& id, std::string& theme_string, Question* question1,
 		Question* question2) :
 		Question(id, theme_string) {
-	question1->setId(id.cons(Path(1)));
-	question2->setId(id.cons(Path(2)));
+	ql_.setCurrentPath(id_);
 	ql_.add(question1);
 	ql_.add(question2);
-	ql_.setCurrentPath(id_);
 	type_ = GROUP;
 }
 
@@ -82,9 +80,7 @@ void Group::edit(Path& local_path, std::string& new_question_string) {
 }
 
 Path Group::increase_id(int level) {
-	for (QuestionList::QLiterator it = *(ql_.begin()); it != ql_.end(); ++it) {
-		(*it)->increase_id();
-	}
+	ql_.increase_ids();
 	return Question::increase_id(level);
 }
 

@@ -38,6 +38,7 @@ public:
 
 	Path cons(Path to_cons);
 
+	friend bool operator< (const Path& other, const Path& p);
 private:
 	std::vector<int> numbers_;
 

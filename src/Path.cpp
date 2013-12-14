@@ -65,7 +65,7 @@ std::ostream& operator <<(std::ostream& out, Path p) {
 }
 
 void Path::clear() {
-	while(!empty()){
+	while (!empty()) {
 		numbers_.pop_back();
 	}
 }
@@ -107,7 +107,7 @@ std::istream& operator>>(std::istream& in, Path &p) {
 	char cur;
 	cur = in.get();
 	p.clear();
-	while(cur == ' '){ //read till you find something else than " "
+	while (cur == ' ') { //read till you find something else than " "
 		cur = in.get();
 	}
 	bool last(false); //true is a number, false is a dot
@@ -140,8 +140,14 @@ void Path::push_front_number(int num) {
 	numbers_.insert(numbers_.begin(), num);
 }
 
-
-
-
-
+bool operator <(const Path& p1, const Path& p2) {
+	std::vector<int>::const_iterator it2;
+	for (std::vector<int>::const_iterator it = p2.numbers_.begin();
+			it != p1.numbers_.end(); it++) {
+		if(*it >= *it2){
+			return false;
+		}
+	}
+	return true;
+}
 

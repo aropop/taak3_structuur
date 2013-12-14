@@ -415,15 +415,17 @@ void QuestionList::group(Path& question1, Path& question2,
 	} else {
 		//do it on this level
 		//copy to bypass side effect
-		int end(question1.peek_front());
+		int begin_i(question1.peek_front());
+
 		Path group_path(question1);
 		Path r(current_path_.cons(group_path));
 		Group* grp = new Group(r, theme_string,
 				questions_.at(question1.peek_number() - 1),
 				questions_.at(question2.peek_number() - 1));
+
 		questions_.erase(questions_.begin() + question1.peek_number() - 1);
 		questions_.erase(questions_.begin() + question2.peek_number() - 2);
-		add(grp, end);
+		add(grp, begin_i);
 	}
 }
 
@@ -562,6 +564,15 @@ void QuestionList::decrease_ids() {
 	for (std::vector<Question*>::iterator it = questions_.begin();
 			it != questions_.end(); it++) {
 		(**it).decrease_id();
+	}
+
+}
+
+void QuestionList::increase_ids() {
+	//moet hier met en vector omdat je anders de id's van de groepen niet mee updatet
+	for (std::vector<Question*>::iterator it = questions_.begin();
+			it != questions_.end(); it++) {
+		(**it).increase_id();
 	}
 
 }

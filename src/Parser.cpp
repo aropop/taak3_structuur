@@ -65,41 +65,46 @@ void Parser::parse_dispatch() {
 		ss >> question_type;
 		ss.ignore();
 		getline(ss, question);
-		//add is verschillend voor choice als voor tekst
-		if (question_type.compare(Question::get_type_string(Question::CHOICE))
-				== 0) {
-			//eerst nieuwe antwoorden prompten
-			std::string * answers = prompt_for_choices();
-			//nieuwe toevoegen geeft de index terug
-			index = ql_->add(Question::CHOICE, question, answers,
-					current_amount_of_answers_, index);
-			print_add_text(question, print_path);
-		} else if (question_type.compare(
-				Question::get_type_string(Question::TEXT)) == 0) {
-
-			//nieuwe toevoegen en commando afronden
-			index = ql_->add(Question::TEXT, question, index);
-			print_add_text(question, print_path);
-		} else if (question_type.compare(
-				Question::get_type_string(Question::BOOL)) == 0) {
-
-			//nieuwe toevoegen en commando afronden
-			index = ql_->add(Question::BOOL, question, index);
-			print_add_text(question, print_path);
-		} else if (question_type.compare(
-				Question::get_type_string(Question::SCALE)) == 0) {
-			//nieuwe toevoegen en commando afronden
-			int min, max;
-			*in_ >> min;
-			*in_ >> max;
-			in_->ignore();
-			index = ql_->add(Question::SCALE, question, min, max, index);
-			print_add_text(question, print_path);
+		if (question.empty()) {
+			*out_ << "Incorrecte vraag tekst! (" << question << ")"
+					<< std::endl;
 		} else {
-			//ongekend vraag type
-			*out_ << "Niet gekend vraag type: " << question_type << std::endl;
-		}
+			//add is verschillend voor choice als voor tekst
+			if (question_type.compare(
+					Question::get_type_string(Question::CHOICE)) == 0) {
+				//eerst nieuwe antwoorden prompten
+				std::string * answers = prompt_for_choices();
+				//nieuwe toevoegen geeft de index terug
+				index = ql_->add(Question::CHOICE, question, answers,
+						current_amount_of_answers_, index);
+				print_add_text(question, print_path);
+			} else if (question_type.compare(
+					Question::get_type_string(Question::TEXT)) == 0) {
 
+				//nieuwe toevoegen en commando afronden
+				index = ql_->add(Question::TEXT, question, index);
+				print_add_text(question, print_path);
+			} else if (question_type.compare(
+					Question::get_type_string(Question::BOOL)) == 0) {
+
+				//nieuwe toevoegen en commando afronden
+				index = ql_->add(Question::BOOL, question, index);
+				print_add_text(question, print_path);
+			} else if (question_type.compare(
+					Question::get_type_string(Question::SCALE)) == 0) {
+				//nieuwe toevoegen en commando afronden
+				int min, max;
+				*in_ >> min;
+				*in_ >> max;
+				in_->ignore();
+				index = ql_->add(Question::SCALE, question, min, max, index);
+				print_add_text(question, print_path);
+			} else {
+				//ongekend vraag type
+				*out_ << "Niet gekend vraag type: " << question_type
+						<< std::endl;
+			}
+		}
 	} else if (command.compare("insert") == 0) {
 		//insert commando
 		std::string question_type, question;
@@ -111,37 +116,43 @@ void Parser::parse_dispatch() {
 			ss >> question_type;
 			ss.ignore();
 			getline(ss, question);
-			//bij choice moeten er nog antwoorden worden gevraagd
-			if (question_type.compare(
-					Question::get_type_string(Question::CHOICE)) == 0) {
-				//choice antwoorden vragen en question toevoegen
-				std::string * answers = prompt_for_choices();
-				ql_->add(Question::CHOICE, question, answers,
-						current_amount_of_answers_, position);
-				print_add_text(question, position);
-			} else if (question_type.compare(
-					Question::get_type_string(Question::TEXT)) == 0) {
-				//TEXT question bouwen en toevoegen
-				ql_->add(Question::TEXT, question, position);
-				print_add_text(question, position);
-			} else if (question_type.compare(
-					Question::get_type_string(Question::BOOL)) == 0) {
-
-				//nieuwe toevoegen en commando afronden
-				ql_->add(Question::BOOL, question, position);
-				print_add_text(question, position);
-			} else if (question_type.compare(
-					Question::get_type_string(Question::SCALE)) == 0) {
-				//nieuwe toevoegen en commando afronden
-				int min, max;
-				*in_ >> min;
-				*in_ >> max;
-				in_->ignore();
-				ql_->add(Question::SCALE, question, min, max, position);
-				print_add_text(question, position);
+			if (question.empty()) {
+				*out_ << "Incorrecte vraag tekst! (" << question << ")"
+						<< std::endl;
 			} else {
-				//onbekend type
-				*out_ << "Niet gekend vraag type" << question_type << std::endl;
+				//bij choice moeten er nog antwoorden worden gevraagd
+				if (question_type.compare(
+						Question::get_type_string(Question::CHOICE)) == 0) {
+					//choice antwoorden vragen en question toevoegen
+					std::string * answers = prompt_for_choices();
+					ql_->add(Question::CHOICE, question, answers,
+							current_amount_of_answers_, position);
+					print_add_text(question, position);
+				} else if (question_type.compare(
+						Question::get_type_string(Question::TEXT)) == 0) {
+					//TEXT question bouwen en toevoegen
+					ql_->add(Question::TEXT, question, position);
+					print_add_text(question, position);
+				} else if (question_type.compare(
+						Question::get_type_string(Question::BOOL)) == 0) {
+
+					//nieuwe toevoegen en commando afronden
+					ql_->add(Question::BOOL, question, position);
+					print_add_text(question, position);
+				} else if (question_type.compare(
+						Question::get_type_string(Question::SCALE)) == 0) {
+					//nieuwe toevoegen en commando afronden
+					int min, max;
+					*in_ >> min;
+					*in_ >> max;
+					in_->ignore();
+					ql_->add(Question::SCALE, question, min, max, position);
+					print_add_text(question, position);
+				} else {
+					//onbekend type
+					*out_ << "Niet gekend vraag type" << question_type
+							<< std::endl;
+				}
 			}
 		} else {
 			//out of biound error printen
@@ -224,14 +235,31 @@ void Parser::parse_dispatch() {
 		Path p2;
 		ss >> p1;
 		ss >> p2;
-		std::string theme_string;
-		getline(ss, theme_string);
-		try {
-			ql_->group(p1, p2, theme_string);
-		} catch (std::string& e) {
-			*out_ << e;
+		if (p1.length() != p2.length()) {
+			*out_ << "Paden zijn niet op het zelfde niveau (" << p1.toString()
+					<< ", " << p2.toString() << std::endl;
+		} else if (p1 == p2) {
+			*out_ << "Geef 2 verschillende paden op het zelfde niveau!"
+					<< std::endl;
+		} else {
+			std::string theme_string;
+			getline(ss, theme_string);
+			if (!theme_string.empty()) {
+				try {
+					if (p1 < p2) {
+						ql_->group(p1, p2, theme_string);
+					} else {
+						ql_->group(p2, p1, theme_string);
+					}
+				} catch (std::string& e) {
+					*out_ << e;
+				}
+			} else {
+				*out_ << "Vul een geldige groepstekst in! (" << theme_string
+						<< ")" << std::endl;
+			}
 		}
-	}else if (command.compare("ungroup") == 0) {
+	} else if (command.compare("ungroup") == 0) {
 		ss.ignore();
 		Path p1;
 		ss >> p1;
