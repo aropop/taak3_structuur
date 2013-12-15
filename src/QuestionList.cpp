@@ -416,15 +416,28 @@ void QuestionList::group(Path& question1, Path& question2,
 		//do it on this level
 		//copy to bypass side effect
 		int begin_i(question1.peek_front());
-
+		int end(question2.peek_front());
+		Group * grp;
 		Path group_path(question1);
 		Path r(current_path_.cons(group_path));
-		Group* grp = new Group(r, theme_string,
-				questions_.at(question1.peek_number() - 1),
-				questions_.at(question2.peek_number() - 1));
+		if (begin_i == (end - 1)) {
+			grp = new Group(r, theme_string,
+					questions_.at(question1.peek_number() - 1),
+					questions_.at(question2.peek_number() - 1));
 
-		questions_.erase(questions_.begin() + question1.peek_number() - 1);
-		questions_.erase(questions_.begin() + question2.peek_number() - 2);
+			questions_.erase(questions_.begin() + question1.peek_number() - 1);
+			questions_.erase(questions_.begin() + question2.peek_number() - 2);
+		} else {
+			grp = new Group(r, theme_string,
+					questions_.at(begin_i - 1),
+					questions_.at(begin_i));
+			questions_.erase(questions_.begin() + begin_i - 1);
+			questions_.erase(questions_.begin() + begin_i - 1);
+			for (int i = begin_i + 1; i < end; ++i) {
+				grp->add(questions_.at(i - 2));
+				questions_.erase(questions_.begin() + begin_i - 1);
+			}
+		}
 		add(grp, begin_i);
 	}
 }

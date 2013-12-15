@@ -141,12 +141,13 @@ void Path::push_front_number(int num) {
 }
 
 bool operator <(const Path& p1, const Path& p2) {
-	std::vector<int>::const_iterator it2;
-	for (std::vector<int>::const_iterator it = p2.numbers_.begin();
+	std::vector<int>::const_iterator it2(p2.numbers_.begin());
+	for (std::vector<int>::const_iterator it = p1.numbers_.begin();
 			it != p1.numbers_.end(); it++) {
-		if(*it >= *it2){
+		if(*it > *it2){
 			return false;
 		}
+		it2++;
 	}
 	return true;
 }

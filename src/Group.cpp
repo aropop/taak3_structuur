@@ -50,13 +50,7 @@ std::string Group::get_question_file_string() const {
 }
 
 std::string Group::get_string() const {
-	std::stringstream ss;
-	ss << id_.toString() << " " << Question::get_type_string(type_) << " "
-			<< question_string << std::endl;
-	ss << "-----" << std::endl;
-	ql_.list(&ss);
-	ss << "------" << std::endl;
-	return ss.str();
+	return get_string(0);
 }
 
 Path Group::add(Question* question, Path& local_path) {
@@ -111,7 +105,7 @@ std::string Group::get_string(int level) const {
 		ss << "     ";
 	}
 	ss << id_.toString() << " " << Question::get_type_string(type_) << " "
-			<< question_string << std::endl;
+			<< amountOfQuestions() << " " << question_string << std::endl;
 	ql_.list(&ss, level + 1);
 	return ss.str();
 }
