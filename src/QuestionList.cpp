@@ -433,9 +433,11 @@ void QuestionList::group(Path& question1, Path& question2,
 					questions_.at(begin_i));
 			questions_.erase(questions_.begin() + begin_i - 1);
 			questions_.erase(questions_.begin() + begin_i - 1);
+			int already_added(0);
 			for (int i = begin_i + 1; i < end; ++i) {
-				grp->add(questions_.at(i - 2));
+				grp->add(questions_.at((i - 2) - already_added));
 				questions_.erase(questions_.begin() + begin_i - 1);
+				already_added++;
 			}
 		}
 		add(grp, begin_i);
