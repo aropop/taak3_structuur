@@ -43,7 +43,7 @@ void ChoiceQuestion::set_answers(std::string * answers, int amount) {
 
 bool ChoiceQuestion::accepts_answer(std::string& a) const {
 	int value = atoi(a.c_str());
-	return (0 < value) && (value < amount_of_answers_);
+	return (0 < value) && (value <= amount_of_answers_);
 }
 
 std::string ChoiceQuestion::get_asking_string() const {

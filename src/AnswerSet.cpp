@@ -1,0 +1,141 @@
+/*
+ * AnswerSet.cpp
+ *
+ *  Created on: 15-dec.-2013
+ *      Author: arno
+ */
+
+#include "AnswerSet.h"
+#include "QuestionList.h"
+#include "Group.h"
+#include <fstream>
+
+AnswerSet::AnswerSet(QuestionList* ql) :
+		ql_(ql) {
+
+}
+AnswerSet::AnswerSet() :
+		ql_(NULL) {
+
+}
+
+AnswerSet::~AnswerSet() {
+
+}
+
+void AnswerSet::write_to_file(std::string& file, std::string& uuid) {
+	std::fstream file_stream(file.c_str(), std::fstream::out);
+	file_stream << "ID " << uuid << std::endl;
+	int count(1);
+	for (std::vector<Answer>::iterator it = vect_.begin(); it != vect_.end();
+			it++) {
+		file_stream << count++ << " " << (*it).getAnswer() << std::endl;
+	}
+	file_stream.close();
+}
+
+void AnswerSet::add(Answer& a) {
+	std::string answer_str(a.getAnswer());
+	Path copy(a.path);
+	Question* question(ql_->getQuestion(copy));
+	if (question->accepts_answer(answer_str)) {
+		if (!vect_.empty()) {
+			bool inserted(false);
+			for (std::vector<Answer>::iterator it = vect_.begin();
+					it != vect_.end(); it++) {
+				if (!((*it).path < a.path)) {
+					vect_.insert(it - 1, a);
+					inserted = true;
+					return;
+				}
+			}
+			if (!inserted) {
+				vect_.push_back(a);
+			}
+		} else {
+			vect_.push_back(a);
+		}
+	} else {
+		throw std::string("Dit antwoord (").append(answer_str).append(
+				") past niet op deze vraag");
+	}
+}
+
+void AnswerSet::list(std::ostream& out) {
+	std::vector<Answer>::iterator ans_it = vect_.begin();
+	int cur_length(1); //if we go deeper we went by a group
+	for (QuestionList::QLiterator q_it = *(ql_->begin()); q_it != ql_->end();
+			++q_it) {
+		if (cur_length != q_it.getPath().length()) { //we gaan een groep binnen
+			if (cur_length < q_it.getPath().length()) {
+				Path p(q_it.getPath());
+				p.pop_number();
+				Question* quest(ql_->getQuestion(p));
+				if (check_group_answered(quest, ans_it)) {
+					out
+							<< ql_->getQuestion(p)->get_ok_string(true,
+									p.length() - 1);
+				} else {
+					out
+							<< ql_->getQuestion(p)->get_ok_string(false,
+									p.length() - 1);
+				}
+				cur_length++;
+			} else {
+				cur_length--;
+			}
+			if (ans_it == vect_.end()) {
+				out << (*q_it)->get_ok_string(false, (*q_it)->getId().length() - 1);
+			} else {
+				if ((*ans_it).path == q_it.getPath()) {
+					out
+							<< (*q_it)->get_ok_string(true,
+									(*q_it)->getId().length() - 1);
+					ans_it++;
+				} else {
+					out
+							<< (*q_it)->get_ok_string(false,
+									(*q_it)->getId().length() - 1);
+				}
+			}
+		} else { //geen groep gewone vraag
+			if (ans_it == vect_.end()) {
+				out << (*q_it)->get_ok_string(false, (*q_it)->getId().length() - 1);
+			} else {
+				if ((*ans_it).path == q_it.getPath()) {
+					out
+							<< (*q_it)->get_ok_string(true,
+									(*q_it)->getId().length() - 1);
+					ans_it++;
+				} else {
+					out
+							<< (*q_it)->get_ok_string(false,
+									(*q_it)->getId().length() - 1);
+				}
+			}
+		}
+	}
+}
+
+bool AnswerSet::check_group_answered(Question* group,
+		std::vector<Answer>::iterator a_it) {
+	if (group->getType() != Question::GROUP) {
+		throw std::string("Groep om te checken is geen groep").append(
+				Question::get_type_string(group->getType()));
+	}
+	Group* casted_group(static_cast<Group*>(group));
+	for (QuestionList::QLiterator q_it = *((*casted_group).getIterator());
+			q_it != ql_->end(); ++q_it) {
+		if (a_it == vect_.end()) {
+			return false;
+		} else {
+			if ((*a_it).path == q_it.getPath()) {
+				a_it++;
+			} else {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
