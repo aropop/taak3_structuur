@@ -16,6 +16,7 @@ public:
 	BoolQuestion(Path id, std::string& question_string);
 	~BoolQuestion();
 	static bool accepts_character(char ch);
+	bool accepts_answer(std::string& answer) const;
 	std::string get_string();
 	std::string get_question_file_string();
 };

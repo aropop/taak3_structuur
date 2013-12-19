@@ -6,6 +6,7 @@
  */
 
 #include "ScaleQuestion.h"
+#include <stdlib.h>
 
 ScaleQuestion::ScaleQuestion() {
 	copied = false;
@@ -40,4 +41,10 @@ std::string ScaleQuestion::get_question_file_string() const {
 			<< max_ << " " << question_string << std::endl;
 	return ss.str();
 }
+
+bool ScaleQuestion::accepts_answer(std::string& a) const {
+	int value = atoi(a.c_str());
+	return in_range(value);
+}
+
 

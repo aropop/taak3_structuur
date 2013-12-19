@@ -20,6 +20,8 @@ public:
 	int getMax() const;
 	std::string get_question_file_string() const;
 
+	bool accepts_answer(std::string & a) const;
+
 private:
     int min_;
     int max_;

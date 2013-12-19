@@ -19,6 +19,9 @@ public:
 
 	std::string get_question_file_string() const;
 	std::string get_string() const;
+	std::string get_asking_string() const;
+
+	bool accepts_answer(std::string& a) const;
 
 	void set_answers(std::string* answers, int amount);
 

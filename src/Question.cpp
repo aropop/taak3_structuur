@@ -8,19 +8,19 @@
 #include "Question.h"
 #include <iostream>
 
-
 //Constructor meestal gebruikt voor type
 Question::Question(Path id, std::string& question) :
-		question_string(question), id_(id), type_(TEXT){
+		question_string(question), id_(id), type_(TEXT) {
 
 }
 
-Question::Question() : id_(Path(0)){
+Question::Question() :
+		id_(Path(0)) {
 
 }
 
 //Destructor
-Question::~Question(){
+Question::~Question() {
 
 }
 //verander de question string
@@ -32,29 +32,28 @@ void Question::set_question_string(std::string& new_question) {
 Path Question::increase_id(int level) {
 	Path store;
 	//store numbers on other levels
-	for(int j = 0; j < level; ++j){
+	for (int j = 0; j < level; ++j) {
 		store.push_number(id_.pop_front_number());
 	}
-	int i (id_.pop_front_number());
+	int i(id_.pop_front_number());
 	++i;
 	id_.push_front_number(i);
-	for(int j = 0; j < level; ++j){
+	for (int j = 0; j < level; ++j) {
 		id_.push_front_number(store.pop_number());
 	}
 	return id_;
 }
 
-
 Path Question::decrease_id(int level) {
 	Path store;
 	//store numbers on other levels
-	for(int j = 0; j < level; ++j){
+	for (int j = 0; j < level; ++j) {
 		store.push_number(id_.pop_front_number());
 	}
-	int i (id_.pop_front_number());
+	int i(id_.pop_front_number());
 	--i;
 	id_.push_front_number(i);
-	for(int j = 0; j < level; ++j){
+	for (int j = 0; j < level; ++j) {
 		id_.push_front_number(store.pop_number());
 	}
 	return id_;
@@ -72,7 +71,8 @@ std::string Question::get_question_file_string() const {
 
 std::string Question::get_string() const {
 	std::stringstream ss;
-	ss << id_.toString() << " " << Question::get_type_string(type_) << " " << question_string << std::endl;
+	ss << id_.toString() << " " << Question::get_type_string(type_) << " "
+			<< question_string << std::endl;
 	return ss.str();
 }
 std::string Question::get_string(int spacing) const {
@@ -110,5 +110,26 @@ std::string Question::get_type_string(Question::QuestionType type) {
 	return return_string;
 }
 
+bool Question::accepts_answer(std::string& answer) const {
+	return true;
+}
 
+std::string Question::get_asking_string() const {
+	return get_string();
+}
+
+std::string Question::get_ok_string(bool ok, int level) const {
+	std::stringstream ss;
+	for (int i = 0; i < level; ++i) {
+		ss << "     ";
+	}
+	ss << id_.toString() << " ";
+	if (ok) {
+		ss << "OK";
+	} else {
+		ss << "NOK";
+	}
+	ss << " " << question_string << std::endl;
+	return ss.str();
+}
 

@@ -6,6 +6,7 @@
  */
 
 #include "ChoiceQuestion.h"
+#include <stdlib.h>
 
 ChoiceQuestion::ChoiceQuestion(Path id, std::string& question,
 		std::string * answers, int amount_of_answers) :
@@ -38,6 +39,20 @@ void ChoiceQuestion::set_answers(std::string * answers, int amount) {
 		throw std::string(
 				"Kan de antwoorden van een CHOICE vraag niet aanpassen!");
 	}
+}
+
+bool ChoiceQuestion::accepts_answer(std::string& a) const {
+	int value = atoi(a.c_str());
+	return (0 < value) && (value < amount_of_answers_);
+}
+
+std::string ChoiceQuestion::get_asking_string() const {
+	std::stringstream ss;
+	ss << get_string();
+	for (int i = 0; i < amount_of_answers_; ++i) {
+		ss << answers_[i] << std::endl;
+	}
+	return ss.str();
 }
 
 //returns the amount of answers for this question

@@ -114,6 +114,10 @@ void Group::ungroup_deep(Path& p) {
 	ql_.ungroup(p);
 }
 
+Question* Group::getQuestion(Path& p) {
+	return ql_.getQuestion(p);
+}
+
 Group::~Group() {
 	//will call the destructor of the questionlist so that will handle the correct deletion
 }

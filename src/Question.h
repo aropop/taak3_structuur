@@ -34,10 +34,14 @@ public:
 	virtual std::string get_question_file_string() const;
 	virtual std::string get_string() const;
 	virtual std::string get_string(int spacing) const;
+	virtual std::string get_asking_string() const;
+	virtual std::string get_ok_string(bool ok, int level=0) const;
 
 	virtual void set_answers(std::string * answers, int amount);
 
 	static std::string get_type_string(QuestionType type);
+
+	virtual bool accepts_answer(std::string& answer) const;
 
 	virtual Path increase_id(int level = 0);
 	virtual Path decrease_id(int level = 0);

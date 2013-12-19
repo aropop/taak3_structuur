@@ -39,6 +39,8 @@ public:
 
 	QuestionList::QLiterator * getIterator();
 
+	Question* getQuestion(Path& p);
+
 	std::string get_question_file_string() const;
 	std::string get_string() const;
 	std::string get_string(int level) const;

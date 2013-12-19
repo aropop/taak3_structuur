@@ -10,6 +10,7 @@
 #include "Parser.h"
 #include "QuestionList.h" //QuestionList
 #include "Question.h" //QuestionTypes
+#include "AnswerSet.h"
 //variabelen initialiseren en parse loop starten
 Parser::Parser(std::istream * in, std::ostream * out, QuestionList * ql) :
 		in_(in), out_(out), ql_(ql) {
@@ -26,16 +27,21 @@ void Parser::parse_next() {
 		if (parser_code_ == WRONG_MESSAGE) {
 			*out_ << "Onbekend commando '" << message_ << "'" << std::endl;
 		}
-		//resetten zodat enkel bij een "fout" er een set van de parser message moet gebeuren
-		reset_parser_code();
-		//inlezen en dispathen
-		getline(*in_, message_);
-		parse_dispatch();
+		if (parser_code_ == TEST) {
+			getline(*in_, message_);
+			parse_dispatch_tester(true);
+		} else {
+			//resetten zodat enkel bij een "fout" er een set van de parser message moet gebeuren
+			reset_parser_code();
+			//inlezen en dispathen
+			getline(*in_, message_);
+			parse_dispatch_editor();
+		}
 	}
 }
 
 //dispatched de commando's
-void Parser::parse_dispatch() {
+void Parser::parse_dispatch_editor() {
 	std::stringstream ss;
 	std::string command;
 
@@ -278,6 +284,11 @@ void Parser::parse_dispatch() {
 			}
 		}
 		parser_code_ = EXIT; //parser_code op exit zetten om te stoppen
+	} else if (command.compare("test") == 0) {
+		parser_code_ = TEST; //parser_code op test zetten om in test modus om te schakelen
+		current_it_ = *(ql_->begin());
+		answers_ = AnswerSet(ql_);
+		*out_ << (**current_it_).get_asking_string();
 	} else if (command.compare("save") == 0) {
 		//save commando
 		if (ql_->dirty) {
@@ -380,5 +391,59 @@ void Parser::getToNextChar(std::stringstream& ss) {
 	while (ss.peek() == ' ') {
 		ss.ignore();
 	}
+}
+
+void Parser::parse_dispatch_tester(bool save_answers) {
+	std::stringstream ss;
+	std::string command;
+
+	bool print_next_question(true);
+
+	ss.str(message_);
+	ss >> command;
+
+	if (special_test_command(command)) {
+		command = command.substr(1, command.size());
+		if (command.compare("quit") == 0) {
+			parser_code_ = CORRECT;
+			print_next_question = false;
+		} else if (command.compare("next") == 0) {
+			int N(1);
+			ss >> N;
+			for (int i = 0; i < N; ++i) {
+				++current_it_;
+			}
+		} else if (command.compare("previous") == 0) {
+			int N(1);
+			ss >> N;
+			for (int i = 0; i < N; ++i) {
+				--current_it_;
+			}
+		} else if (command.compare("goto") == 0) {
+			++current_it_;
+		} else if (command.compare("list") == 0) {
+			answers_.list(*out_);
+			print_next_question = false;
+		} else {
+			*out_ << "Niet gekend test commando '" << command << "'"
+					<< std::endl;
+		}
+	} else {
+		try {
+			Path path(current_it_.getPath());
+			Answer a(message_, path);
+			answers_.add(a);
+			++current_it_;
+		} catch (std::string& e) {
+			*out_ << e << std::endl;
+		}
+	}
+	if (print_next_question)
+		*out_ << (**current_it_).get_asking_string();
+
+}
+
+bool Parser::special_test_command(const std::string& command) const {
+	return command.at(0) == ':';
 }
 

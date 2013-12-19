@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include "QuestionList.h"
+#include "AnswerSet.h"
 
 #ifndef PARSER_H_
 #define PARSER_H_
@@ -22,6 +23,8 @@ private:
 	std::istream * in_;
 	std::ostream * out_;
 	QuestionList * ql_;
+	QuestionList::QLiterator current_it_;
+	AnswerSet answers_;
 
 	enum ParserCode {
 		EXIT, WRONG_MESSAGE, CORRECT, TEST
@@ -33,12 +36,15 @@ private:
 	std::string * prompt_for_choices();
 	std::string prompt_for_new_question_string(Path& index);
 
-	void parse_dispatch();
+	void parse_dispatch_editor();
+	void parse_dispatch_tester(bool save_answers);
 	bool prompt_save();
 
 	void getToNextChar(std::stringstream& ss);
 
 	inline void reset_parser_code();
+
+	bool special_test_command(const std::string& command) const;
 
 	const inline void print_add_text(std::string& question, Path position);
 	const inline void print_out_of_bounds(Path index);

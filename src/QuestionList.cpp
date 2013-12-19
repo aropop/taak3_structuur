@@ -428,8 +428,7 @@ void QuestionList::group(Path& question1, Path& question2,
 			questions_.erase(questions_.begin() + question1.peek_number() - 1);
 			questions_.erase(questions_.begin() + question2.peek_number() - 2);
 		} else {
-			grp = new Group(r, theme_string,
-					questions_.at(begin_i - 1),
+			grp = new Group(r, theme_string, questions_.at(begin_i - 1),
 					questions_.at(begin_i));
 			questions_.erase(questions_.begin() + begin_i - 1);
 			questions_.erase(questions_.begin() + begin_i - 1);
@@ -448,7 +447,7 @@ int QuestionList::length() const {
 	return questions_.size();
 }
 
-QuestionList::QLiterator::QLiterator(QuestionList * ql) :
+QuestionList::QLiterator::QLiterator(QuestionList * ql) :pos_(Path(1)),
 		ql_(ql), deep_(false), ended_(false) {
 	cur_it_ = ql_->questions_.begin();
 	if ((*cur_it_)->getType() == Question::GROUP) {
@@ -456,7 +455,7 @@ QuestionList::QLiterator::QLiterator(QuestionList * ql) :
 		deep_iterator_ = dynamic_cast<Group*>(*cur_it_)->getIterator();
 	}
 }
-QuestionList::QLiterator::QLiterator(QuestionList * ql, bool getEnd) :
+QuestionList::QLiterator::QLiterator(QuestionList * ql, bool getEnd) :pos_(Path(1)),
 		ql_(ql), deep_(false), ended_(false) {
 	if (getEnd) {
 		cur_it_ = ql_->questions_.end();
@@ -481,6 +480,7 @@ QuestionList::QLiterator& QuestionList::QLiterator::operator ++() {
 	if (!deep_) {
 		//we can do this on this level
 		++cur_it_;
+		++pos_;
 		if (*this == ql_->end()) {
 			ended_ = true; //let upper level know we are done here
 		} else if ((*cur_it_)->getType() == Question::GROUP) {
@@ -504,6 +504,7 @@ QuestionList::QLiterator QuestionList::QLiterator::operator --() {
 	if (!deep_) {
 		//we can do this on this level
 		--cur_it_;
+		--pos_;
 		if (*this == ql_->end()) {
 			ended_ = true; //let upper level know we are done here
 		} else if ((*cur_it_)->getType() == Question::GROUP) {
@@ -556,6 +557,14 @@ int QuestionList::deepAmountOfQuestions() {
 	return i;
 }
 
+Path QuestionList::QLiterator::getPath() {
+	if (deep_) {
+		Path pad(deep_iterator_->getPath());
+		return pos_.cons(pad);
+	} else {
+		return pos_;
+	}
+}
 QuestionList::QLiterator::QLiterator() {
 }
 
@@ -633,6 +642,21 @@ void QuestionList::delete_pointer(Path& path) {
 				+ path.peek_front(); it != questions_.end(); it++) {
 			(**it).decrease_id(current_path_.length());
 		}
+	}
+}
+
+Question* QuestionList::getQuestion(Path& p) {
+	if (p.length() > 1) {
+		Question* q(questions_.at(p.peek_front() - 1));
+		if (q->getType() == Question::GROUP) {
+			Group * g(static_cast<Group*>(q));
+			p.pop_front_number();
+			return g->getQuestion(p);
+		} else {
+			throw std::string("Het opgegeven pad is geen vraag");
+		}
+	} else {
+		return questions_.at(p.peek_front() - 1);
 	}
 }
 

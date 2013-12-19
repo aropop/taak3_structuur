@@ -50,6 +50,8 @@ public:
 
 	void ungroup(Path& p);
 
+	Question* getQuestion(Path& p);
+
 	//hulp
 	bool dirty;
 	bool in_range(Path& position) const;
@@ -80,6 +82,7 @@ public:
 		bool ended() const {
 			return ended_;
 		}
+		Path getPath();
 	private:
 		Path pos_;
 		QuestionList* ql_;

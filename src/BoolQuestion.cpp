@@ -29,6 +29,14 @@ std::string BoolQuestion::get_string(){
 	ss << id_.toString() << " " << get_type_string(type_) << " " << question_string;
 	return ss.str();
 }
+bool BoolQuestion::accepts_answer(std::string& answer) const {
+	if(answer.length() != 1){ //if for "lazy" answer
+		return false;
+	}else{
+		return accepts_character(answer.at(0));
+	}
+}
+
 std::string BoolQuestion::get_question_file_string(){
 	return get_string();
 }
