@@ -23,7 +23,7 @@ AnswerSet::~AnswerSet() {
 
 }
 
-void AnswerSet::write_to_file(std::string& file, std::string& uuid) {
+void AnswerSet::write_to_file(const std::string& file, const std::string& uuid) {
 	std::fstream file_stream(file.c_str(), std::fstream::out);
 	file_stream << "ID " << uuid << std::endl;
 	int count(1);
@@ -63,45 +63,36 @@ void AnswerSet::add(Answer& a) {
 
 void AnswerSet::list(std::ostream& out) {
 	std::vector<Answer>::iterator ans_it = vect_.begin();
+	QuestionList::QLiterator q_it = *(ql_->begin());
 	int cur_length(1); //if we go deeper we went by a group
-	for (QuestionList::QLiterator q_it = *(ql_->begin()); q_it != ql_->end();
-			++q_it) {
+	while (q_it != ql_->end()) {
 		if (cur_length != q_it.getPath().length()) { //we gaan een groep binnen
 			if (cur_length < q_it.getPath().length()) {
 				Path p(q_it.getPath());
-				p.pop_number();
-				Path g (p);
+				int j;
+				for (j = 0; j <= (p.length() - cur_length); ++j) {
+					p.pop_number();
+				}
+				Path g(p);
 				Question* quest(ql_->getQuestion(g));
 				if (check_group_answered(quest, ans_it)) {
 					out
 							<< ql_->getQuestion(p)->get_ok_string(true,
-									p.length() - 1);
+									(q_it.getPath().length() - j)  - 1);
 				} else {
 					out
 							<< ql_->getQuestion(p)->get_ok_string(false,
-									p.length() - 1);
+									(q_it.getPath().length() - j) - 1);
 				}
 				cur_length++;
 			} else {
 				cur_length--;
 			}
-			if (ans_it == vect_.end()) {
-				out << (*q_it)->get_ok_string(false, (*q_it)->getId().length() - 1);
-			} else {
-				if ((*ans_it).path == q_it.getPath()) {
-					out
-							<< (*q_it)->get_ok_string(true,
-									(*q_it)->getId().length() - 1);
-					ans_it++;
-				} else {
-					out
-							<< (*q_it)->get_ok_string(false,
-									(*q_it)->getId().length() - 1);
-				}
-			}
 		} else { //geen groep gewone vraag
 			if (ans_it == vect_.end()) {
-				out << (*q_it)->get_ok_string(false, (*q_it)->getId().length() - 1);
+				out
+						<< (*q_it)->get_ok_string(false,
+								(*q_it)->getId().length() - 1);
 			} else {
 				if ((*ans_it).path == q_it.getPath()) {
 					out
@@ -114,6 +105,7 @@ void AnswerSet::list(std::ostream& out) {
 									(*q_it)->getId().length() - 1);
 				}
 			}
+			++q_it;
 		}
 	}
 }
@@ -141,4 +133,19 @@ bool AnswerSet::check_group_answered(Question* group,
 	}
 	return true;
 }
+
+bool AnswerSet::fully_answered() {
+	std::vector<Answer>::iterator ans_it = vect_.begin();
+	QuestionList::QLiterator q_it = *(ql_->begin());
+	while(q_it != ql_->end()){
+		if(ans_it == vect_.end() || !((*ans_it).path == q_it.getPath())){
+			return false;
+		}else{
+			++q_it;
+			++ans_it;
+		}
+	}
+	return true;
+}
+
 

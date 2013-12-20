@@ -20,12 +20,13 @@ public:
 	AnswerSet();
 	~AnswerSet();
 
-	void write_to_file(std::string & file, std::string& uuid);
+	void write_to_file(const std::string & file, const std::string& uuid);
 
 	void add(Answer& a);
 
 	void list(std::ostream& out);
 
+	bool fully_answered();
 
 
 private:

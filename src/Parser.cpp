@@ -13,8 +13,24 @@
 #include "AnswerSet.h"
 //variabelen initialiseren en parse loop starten
 Parser::Parser(std::istream * in, std::ostream * out, QuestionList * ql) :
-		in_(in), out_(out), ql_(ql) {
+		in_(in), out_(out), ql_(ql), answer_fn_("") {
 	parse_next();
+}
+
+Parser::Parser(std::istream* in, std::ostream* out, QuestionList* ql,
+		const std::string& answer_fn) :
+		in_(in), out_(out), ql_(ql), answer_fn_(answer_fn) {
+	parser_code_ = TEST;
+	current_it_ = *(ql_->begin());
+	answers_ = AnswerSet(ql_);
+	if (current_it_ != ql_->end()) {
+		*out_ << (**current_it_).get_asking_string();
+		getline(*in_, message_);
+		parse_dispatch_tester(!answer_fn_.empty(), answer_fn_);
+		parse_next();
+	} else {
+		*out_ << "Lege enquête!";
+	}
 }
 
 Parser::~Parser() {
@@ -29,7 +45,7 @@ void Parser::parse_next() {
 		}
 		if (parser_code_ == TEST) {
 			getline(*in_, message_);
-			parse_dispatch_tester(true);
+			parse_dispatch_tester(!answer_fn_.empty(), answer_fn_);
 		} else {
 			//resetten zodat enkel bij een "fout" er een set van de parser message moet gebeuren
 			reset_parser_code();
@@ -377,12 +393,12 @@ std::string Parser::prompt_for_new_question_string(Path& index) {
 }
 
 //inline print functies om code reproductie te vermijden
-const inline void Parser::print_add_text(std::string& question, Path position) {
+void Parser::print_add_text(const std::string& question, Path position) const {
 	*out_ << "Vraag (" << question << ") toegevoegd op plaats "
 			<< position.toString() << "." << std::endl;
 }
 
-inline const void Parser::print_out_of_bounds(Path index) {
+void Parser::print_out_of_bounds(Path index) const {
 	*out_ << "Ongeldige invoer (" << index.toString() << "), N="
 			<< ql_->amountOfQuestions() << std::endl;
 }
@@ -393,7 +409,8 @@ void Parser::getToNextChar(std::stringstream& ss) {
 	}
 }
 
-void Parser::parse_dispatch_tester(bool save_answers) {
+void Parser::parse_dispatch_tester(bool save_answers,
+		const std::string & file_name) {
 	std::stringstream ss;
 	std::string command;
 
@@ -402,11 +419,41 @@ void Parser::parse_dispatch_tester(bool save_answers) {
 	ss.str(message_);
 	ss >> command;
 
+	if (current_it_ == ql_->end()) //we eindigen op het einde
+			{
+		command = std::string(":quit");
+		print_next_question = false;
+	}
+
 	if (special_test_command(command)) {
 		command = command.substr(1, command.size());
 		if (command.compare("quit") == 0) {
-			parser_code_ = CORRECT;
-			print_next_question = false;
+			if (answers_.fully_answered()) {
+				print_next_question = false;
+				if (save_answers) {
+					parser_code_ = EXIT;
+					answers_.write_to_file(file_name, ql_->getUuidString());
+				} else {
+					parser_code_ = CORRECT;
+				}
+			} else {
+				*out_
+						<< "De vragen lijst is niet volledig beantwoord, toch eindigen? (j/n)"
+						<< std::endl;
+				std::string j_n;
+				getline(*in_, j_n);
+				while ((j_n.compare("j") != 0) && (j_n.compare("n") != 0)) {
+					*out_ << "j of n invullen!" << std::endl;
+					getline(*in_, j_n);
+				}
+				if (j_n.compare("j") == 0) {
+					parser_code_ = CORRECT;
+					print_next_question = false;
+					if (save_answers) {
+						answers_.write_to_file(file_name, ql_->getUuidString());
+					}
+				}
+			}
 		} else if (command.compare("next") == 0) {
 			int N(1);
 			ss >> N;
@@ -446,8 +493,14 @@ void Parser::parse_dispatch_tester(bool save_answers) {
 			*out_ << e << std::endl;
 		}
 	}
-	if (print_next_question)
+	if ((current_it_ == ql_->end()) && save_answers) {
+		parser_code_ = EXIT;
+		answers_.write_to_file(file_name, ql_->getUuidString());
+	} else if (current_it_ == ql_->end()) {
+		parser_code_ = CORRECT;
+	} else if (print_next_question && (current_it_ != ql_->end())) {
 		*out_ << (**current_it_).get_asking_string();
+	}
 
 }
 

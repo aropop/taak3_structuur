@@ -94,6 +94,8 @@ public:
 
 	QLiterator * begin();
 	QLiterator end();
+
+	std::string getUuidString();
 protected:
 	std::vector<Question*> questions_;
 private:
@@ -106,5 +108,7 @@ private:
 	void read_from_file(std::ifstream * input_file);
 
 };
+
+std::string uuid_to_string(char * character_array);
 
 #endif /* QUESTIONLIST_H_ */

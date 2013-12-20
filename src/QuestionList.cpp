@@ -447,23 +447,33 @@ int QuestionList::length() const {
 	return questions_.size();
 }
 
-QuestionList::QLiterator::QLiterator(QuestionList * ql) :pos_(Path(1)),
-		ql_(ql), deep_(false), ended_(false) {
+QuestionList::QLiterator::QLiterator(QuestionList * ql) :
+		pos_(Path(1)), ql_(ql), deep_(false), ended_(false) {
 	cur_it_ = ql_->questions_.begin();
-	if ((*cur_it_)->getType() == Question::GROUP) {
-		deep_ = true;
-		deep_iterator_ = dynamic_cast<Group*>(*cur_it_)->getIterator();
+	if (cur_it_ != ql_->questions_.end()) {
+		if ((*cur_it_)->getType() == Question::GROUP) {
+			deep_ = true;
+			deep_iterator_ = dynamic_cast<Group*>(*cur_it_)->getIterator();
+		}
+	} else {
+		ended_ = true;
+		cur_it_ = ql_->questions_.end();
 	}
 }
-QuestionList::QLiterator::QLiterator(QuestionList * ql, bool getEnd) :pos_(Path(1)),
-		ql_(ql), deep_(false), ended_(false) {
+QuestionList::QLiterator::QLiterator(QuestionList * ql, bool getEnd) :
+		pos_(Path(1)), ql_(ql), deep_(false), ended_(false) {
 	if (getEnd) {
 		cur_it_ = ql_->questions_.end();
 	} else {
 		cur_it_ = ql_->questions_.begin();
-		if ((*cur_it_)->getType() == Question::GROUP) {
-			deep_ = true;
-			deep_iterator_ = dynamic_cast<Group*>(*cur_it_)->getIterator();
+		if (cur_it_ != ql_->questions_.end()) {
+			if ((*cur_it_)->getType() == Question::GROUP) {
+				deep_ = true;
+				deep_iterator_ = dynamic_cast<Group*>(*cur_it_)->getIterator();
+			}
+		} else {
+			cur_it_ = ql_->questions_.end();
+			ended_ = true;
 		}
 	}
 }
@@ -658,5 +668,11 @@ Question* QuestionList::getQuestion(Path& p) {
 	} else {
 		return questions_.at(p.peek_front() - 1);
 	}
+}
+
+std::string QuestionList::getUuidString() {
+	char c_uuid[36];
+	uuid_unparse(uuid_, c_uuid);
+	return uuid_to_string(c_uuid);
 }
 
