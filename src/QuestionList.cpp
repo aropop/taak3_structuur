@@ -505,7 +505,7 @@ QuestionList::QLiterator QuestionList::QLiterator::operator --() {
 		//we can do this on this level
 		--cur_it_;
 		--pos_;
-		if (*this == ql_->end()) {
+		if (*this == ql_->end() || pos_.peek_number() < 1) {
 			ended_ = true; //let upper level know we are done here
 		} else if ((*cur_it_)->getType() == Question::GROUP) {
 			//jump deeper

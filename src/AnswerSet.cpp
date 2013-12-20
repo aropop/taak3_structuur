@@ -70,7 +70,8 @@ void AnswerSet::list(std::ostream& out) {
 			if (cur_length < q_it.getPath().length()) {
 				Path p(q_it.getPath());
 				p.pop_number();
-				Question* quest(ql_->getQuestion(p));
+				Path g (p);
+				Question* quest(ql_->getQuestion(g));
 				if (check_group_answered(quest, ans_it)) {
 					out
 							<< ql_->getQuestion(p)->get_ok_string(true,
@@ -125,11 +126,13 @@ bool AnswerSet::check_group_answered(Question* group,
 	}
 	Group* casted_group(static_cast<Group*>(group));
 	for (QuestionList::QLiterator q_it = *((*casted_group).getIterator());
-			q_it != ql_->end(); ++q_it) {
+			!q_it.ended(); ++q_it) {
 		if (a_it == vect_.end()) {
 			return false;
 		} else {
-			if ((*a_it).path == q_it.getPath()) {
+			Path ans_path((*a_it).path);
+			ans_path.pop_front_number();
+			if (ans_path == q_it.getPath()) {
 				a_it++;
 			} else {
 				return false;

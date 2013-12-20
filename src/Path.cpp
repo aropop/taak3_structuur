@@ -111,17 +111,25 @@ std::istream& operator>>(std::istream& in, Path &p) {
 		cur = in.get();
 	}
 	bool last(false); //true is a number, false is a dot
-	while ((cur != ' ') && (cur != '\n') && !in.eof()) {
+	int keep(0);
+	while ((cur != ' ') && (cur != '\n') && !in.eof()  ) {
 		if (last) {
 			if (cur == '.') { //skip and jump to next
+				p.push_number(keep);
+				keep = 0;
 				cur = in.get();
 				last = false;
 			} else {
+				if(isdigit(cur)){
+					keep = (10 * keep) + (cur - 48);
+					cur = in.get();
+				}else{
 				throw std::string("Invallid path");
+				}
 			}
 		} else {
 			if (isdigit(cur)) {
-				p.push_number(cur - 48);
+				keep = cur - 48;
 				last = true;
 				cur = in.get();
 			} else {
@@ -129,6 +137,7 @@ std::istream& operator>>(std::istream& in, Path &p) {
 			}
 		}
 	}
+	p.push_number(keep);
 	return in;
 }
 

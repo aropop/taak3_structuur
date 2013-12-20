@@ -420,7 +420,15 @@ void Parser::parse_dispatch_tester(bool save_answers) {
 				--current_it_;
 			}
 		} else if (command.compare("goto") == 0) {
-			++current_it_;
+			Path goto_path;
+			ss >> goto_path;
+			while (!(goto_path == current_it_.getPath())) {
+				if (goto_path < current_it_.getPath()) {
+					--current_it_;
+				} else {
+					++current_it_;
+				}
+			}
 		} else if (command.compare("list") == 0) {
 			answers_.list(*out_);
 			print_next_question = false;
