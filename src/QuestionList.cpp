@@ -666,6 +666,9 @@ Question* QuestionList::getQuestion(Path& p) {
 			throw std::string("Het opgegeven pad is geen vraag");
 		}
 	} else {
+		if((unsigned) p.peek_front() >  questions_.size()){
+			throw std::string("Pad ligt niet binnen het bereik van deze enquête");
+		}
 		return questions_.at(p.peek_front() - 1);
 	}
 }

@@ -43,7 +43,12 @@ void AnswerSet::add(Answer& a) {
 			bool inserted(false);
 			for (std::vector<Answer>::iterator it = vect_.begin();
 					it != vect_.end(); it++) {
-				if (!((*it).path < a.path)) {
+				if((*it).path == a.path){ //replacen
+					it = vect_.erase(it);
+					it = vect_.insert(it, a);
+					inserted = true;
+					return;
+				}else if (!((*it).path < a.path)) {
 					vect_.insert(it - 1, a);
 					inserted = true;
 					return;

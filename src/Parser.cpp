@@ -469,12 +469,21 @@ void Parser::parse_dispatch_tester(bool save_answers,
 		} else if (command.compare("goto") == 0) {
 			Path goto_path;
 			ss >> goto_path;
-			while (!(goto_path == current_it_.getPath())) {
-				if (goto_path < current_it_.getPath()) {
-					--current_it_;
-				} else {
-					++current_it_;
+			try {
+				Question* q(ql_->getQuestion(goto_path));
+				if (q->getType() == Question::GROUP) {
+					*out_ << "Geen geldige vraag om naar te springen"
+							<< std::endl;
 				}
+				while (!(goto_path == current_it_.getPath())) {
+					if (goto_path < current_it_.getPath()) {
+						--current_it_;
+					} else {
+						++current_it_;
+					}
+				}
+			} catch (std::string& e) {
+				*out_ << e << std::endl;
 			}
 		} else if (command.compare("list") == 0) {
 			answers_.list(*out_);
@@ -493,11 +502,16 @@ void Parser::parse_dispatch_tester(bool save_answers,
 			*out_ << e << std::endl;
 		}
 	}
-	if ((current_it_ == ql_->end()) && save_answers) {
+	if ((current_it_ == ql_->end()) && save_answers
+			&& answers_.fully_answered()) {
 		parser_code_ = EXIT;
 		answers_.write_to_file(file_name, ql_->getUuidString());
-	} else if (current_it_ == ql_->end()) {
+	} else if (current_it_ == ql_->end() && answers_.fully_answered()) {
 		parser_code_ = CORRECT;
+	} else if (current_it_ == ql_->end()) {
+		*out_
+				<< "Beantwoord eerst alle vragen voordat je de enquête kan beëindigen"
+				<< std::endl;
 	} else if (print_next_question && (current_it_ != ql_->end())) {
 		*out_ << (**current_it_).get_asking_string();
 	}
