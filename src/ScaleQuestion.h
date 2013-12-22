@@ -19,6 +19,7 @@ public:
     int getMin() const;
 	int getMax() const;
 	std::string get_question_file_string() const;
+	std::string get_asking_string() const;
 
 	bool accepts_answer(std::string & a) const;
 

@@ -141,10 +141,10 @@ std::string QuestionList::get_question_string(Path& index) const {
 void QuestionList::edit(Path& question_number,
 		std::string& new_question_string) {
 	if (question_number.length() > 1) {
-		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number()))->edit(
+		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number() - 1))->edit(
 				question_number, new_question_string);
 	} else {
-		questions_.at(question_number.peek_number())->set_question_string(
+		questions_.at(question_number.peek_number() - 1)->set_question_string(
 				new_question_string);
 		dirty = true;
 	}
@@ -154,10 +154,11 @@ void QuestionList::edit(Path& question_number,
 void QuestionList::edit_choice(Path& question_number, std::string* new_answers,
 		int amount) {
 	if (question_number.length() > 1) {
-		dynamic_cast<Group*>(questions_.at(question_number.pop_front_number()))->edit_choice(
-				question_number, new_answers, amount);
+		Path copy (question_number);
+		dynamic_cast<Group*>(questions_.at(copy.pop_front_number() - 1))->edit_choice(
+				copy, new_answers, amount);
 	} else {
-		questions_.at(question_number.peek_number())->set_answers(new_answers,
+		questions_.at(question_number.peek_number() -1)->set_answers(new_answers,
 				amount);
 		dirty = true;
 	}

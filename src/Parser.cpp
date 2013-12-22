@@ -206,9 +206,7 @@ void Parser::parse_dispatch_editor() {
 			if (ql_->in_range(index)) {
 				std::string new_question_string =
 						prompt_for_new_question_string(index);
-				--index;
 				ql_->edit(index, new_question_string);
-				++index;
 				*out_ << "Vraagtekst voor vraag " << index << " aangepast."
 						<< std::endl;
 			} else {
@@ -224,15 +222,12 @@ void Parser::parse_dispatch_editor() {
 			if (ql_->in_range(index)) {
 				//answers vragen en choices aanpassen
 				*out_ << "Nieuwe antwoorden voor vraag " << index << " (";
-				--index;
-				++index;
 				*out_ << ql_->get_question_string(index) << ")" << std::endl;
 				std::string * answers = prompt_for_choices();
 				//edit zou een error kunnen throwen wanneer dit een choice is
 				try {
 					ql_->edit_choice(index, answers,
 							current_amount_of_answers_);
-					++index;
 					*out_ << "Antwoorden voor vraag " << index << " aangepast."
 							<< std::endl;
 				} catch (std::string& e) {

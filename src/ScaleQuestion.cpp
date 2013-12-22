@@ -42,6 +42,10 @@ std::string ScaleQuestion::get_question_file_string() const {
 	return ss.str();
 }
 
+std::string ScaleQuestion::get_asking_string() const{
+	return get_question_file_string();
+}
+
 bool ScaleQuestion::accepts_answer(std::string& a) const {
 	int value = atoi(a.c_str());
 	return in_range(value);
