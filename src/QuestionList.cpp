@@ -129,10 +129,11 @@ bool QuestionList::in_range(Path& position) const {
 //geeft de question string door
 std::string QuestionList::get_question_string(Path& index) const {
 	if (index.length() > 1) {
-		return dynamic_cast<Group*>(questions_.at(index.pop_front_number()))->get_question_string(
-				index);
+		Path copy(index);
+		return dynamic_cast<Group*>(questions_.at(copy.pop_front_number() - 1))->get_question_string(
+				copy);
 	} else {
-		return questions_.at(index.peek_number())->question_string;
+		return questions_.at(index.peek_number() - 1)->question_string;
 	}
 }
 
@@ -171,7 +172,7 @@ int QuestionList::amountOfQuestions() const {
 void QuestionList::delete_question(Path& question_number) {
 	if (question_number.length() > 1) {
 		Group* grp = dynamic_cast<Group*>(questions_.at(
-				question_number.peek_front()));
+				question_number.pop_front_number() - 1));
 		if (grp != NULL) {
 			grp->delete_question(question_number);
 		} else {
@@ -180,10 +181,10 @@ void QuestionList::delete_question(Path& question_number) {
 		}
 	} else {
 		//avoid memory leaks
-		delete questions_.at(question_number.peek_number());
-		questions_.erase(questions_.begin() + question_number.peek_number());
+		delete questions_.at(question_number.peek_number() - 1);
+		questions_.erase(questions_.begin() + question_number.peek_number() - 1);
 		for (std::vector<Question*>::iterator it = questions_.begin()
-				+ question_number.peek_front(); it != questions_.end(); it++) {
+				+ question_number.peek_front() - 1; it != questions_.end(); it++) {
 			(**it).decrease_id(current_path_.length());
 		}
 	}
@@ -337,15 +338,20 @@ Path QuestionList::add(Question* question, Path position) {
 				"Vraag kan niet worden toegevoegd niet binnen bereik");
 	}
 	if (position.length() > 1) {
-		int pos_on_this_level(position.pop_front_number() - 1);
-		Group* grp(dynamic_cast<Group*>(questions_.at(pos_on_this_level)));
-		if (grp != NULL) { //test of het wel een groep is
-			grp->add(question, position);
-			//push to get right number to print
-			position.push_front_number(pos_on_this_level);
+		if (position.peek_front() == amountOfQuestions()) {
+			int pos_on_this_level(position.pop_front_number() - 1);
+			Group* grp(dynamic_cast<Group*>(questions_.at(pos_on_this_level)));
+			if (grp != NULL) { //test of het wel een groep is
+				grp->add(question, position);
+				//push to get right number to print
+				position.push_front_number(pos_on_this_level);
+			} else {
+				throw std::string(
+						"De positie waarop je wilt toevoegen is geen groep!");
+			}
 		} else {
 			throw std::string(
-					"De positie waarop je wilt toevoegen is geen groep!");
+					"Vraag ligt niet binnen het bereik van deze enquête!");
 		}
 	} else {
 		questions_.insert(questions_.begin() + position.peek_front() - 1,
@@ -420,26 +426,33 @@ void QuestionList::group(Path& question1, Path& question2,
 		Group * grp;
 		Path group_path(question1);
 		Path r(current_path_.cons(group_path));
-		if (begin_i == (end - 1)) {
-			grp = new Group(r, theme_string,
-					questions_.at(question1.peek_number() - 1),
-					questions_.at(question2.peek_number() - 1));
-
-			questions_.erase(questions_.begin() + question1.peek_number() - 1);
-			questions_.erase(questions_.begin() + question2.peek_number() - 2);
+		if ((unsigned)question2.peek_number() > questions_.size()) {
+			throw std::string(
+					"Je probeert te groupen op een vraag niet binnen het bereik!");
 		} else {
-			grp = new Group(r, theme_string, questions_.at(begin_i - 1),
-					questions_.at(begin_i));
-			questions_.erase(questions_.begin() + begin_i - 1);
-			questions_.erase(questions_.begin() + begin_i - 1);
-			int already_added(0);
-			for (int i = begin_i + 1; i < end; ++i) {
-				grp->add(questions_.at((i - 2) - already_added));
+			if (begin_i == (end - 1)) {
+				grp = new Group(r, theme_string,
+						questions_.at(question1.peek_number() - 1),
+						questions_.at(question2.peek_number() - 1));
+
+				questions_.erase(
+						questions_.begin() + question1.peek_number() - 1);
+				questions_.erase(
+						questions_.begin() + question2.peek_number() - 2);
+			} else {
+				grp = new Group(r, theme_string, questions_.at(begin_i - 1),
+						questions_.at(begin_i));
 				questions_.erase(questions_.begin() + begin_i - 1);
-				already_added++;
+				questions_.erase(questions_.begin() + begin_i - 1);
+				int already_added(0);
+				for (int i = begin_i + 1; i < end; ++i) {
+					grp->add(questions_.at((i - 2) - already_added));
+					questions_.erase(questions_.begin() + begin_i - 1);
+					already_added++;
+				}
 			}
+			add(grp, begin_i);
 		}
-		add(grp, begin_i);
 	}
 }
 
@@ -666,8 +679,9 @@ Question* QuestionList::getQuestion(Path& p) {
 			throw std::string("Het opgegeven pad is geen vraag");
 		}
 	} else {
-		if((unsigned) p.peek_front() >  questions_.size()){
-			throw std::string("Pad ligt niet binnen het bereik van deze enquête");
+		if ((unsigned) p.peek_front() > questions_.size()) {
+			throw std::string(
+					"Pad ligt niet binnen het bereik van deze enquête");
 		}
 		return questions_.at(p.peek_front() - 1);
 	}

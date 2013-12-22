@@ -147,20 +147,31 @@ void Parser::parse_dispatch_editor() {
 						Question::get_type_string(Question::CHOICE)) == 0) {
 					//choice antwoorden vragen en question toevoegen
 					std::string * answers = prompt_for_choices();
-					ql_->add(Question::CHOICE, question, answers,
-							current_amount_of_answers_, position);
-					print_add_text(question, position);
+					try {
+						ql_->add(Question::CHOICE, question, answers,
+								current_amount_of_answers_, position);
+						print_add_text(question, position);
+					} catch (std::string& e) {
+						*out_ << e << std::endl;
+					}
 				} else if (question_type.compare(
 						Question::get_type_string(Question::TEXT)) == 0) {
 					//TEXT question bouwen en toevoegen
-					ql_->add(Question::TEXT, question, position);
-					print_add_text(question, position);
+					try {
+						ql_->add(Question::TEXT, question, position);
+						print_add_text(question, position);
+					} catch (std::string& e) {
+						*out_ << e << std::endl;
+					}
 				} else if (question_type.compare(
 						Question::get_type_string(Question::BOOL)) == 0) {
-
-					//nieuwe toevoegen en commando afronden
-					ql_->add(Question::BOOL, question, position);
-					print_add_text(question, position);
+					try {
+						//nieuwe toevoegen en commando afronden
+						ql_->add(Question::BOOL, question, position);
+						print_add_text(question, position);
+					} catch (std::string& e) {
+						*out_ << e << std::endl;
+					}
 				} else if (question_type.compare(
 						Question::get_type_string(Question::SCALE)) == 0) {
 					//nieuwe toevoegen en commando afronden
@@ -168,8 +179,12 @@ void Parser::parse_dispatch_editor() {
 					*in_ >> min;
 					*in_ >> max;
 					in_->ignore();
-					ql_->add(Question::SCALE, question, min, max, position);
-					print_add_text(question, position);
+					try {
+						ql_->add(Question::SCALE, question, min, max, position);
+						print_add_text(question, position);
+					} catch (std::string& e) {
+						*out_ << e << std::endl;
+					}
 				} else {
 					//onbekend type
 					*out_ << "Niet gekend vraag type" << question_type
@@ -210,6 +225,7 @@ void Parser::parse_dispatch_editor() {
 				//answers vragen en choices aanpassen
 				*out_ << "Nieuwe antwoorden voor vraag " << index << " (";
 				--index;
+				++index;
 				*out_ << ql_->get_question_string(index) << ")" << std::endl;
 				std::string * answers = prompt_for_choices();
 				//edit zou een error kunnen throwen wanneer dit een choice is
@@ -237,14 +253,14 @@ void Parser::parse_dispatch_editor() {
 		//out of bounds
 		if (ql_->in_range(index)) {
 			//text vragen voor verwijderen
-			--index;
+			//--index;
 			std::string text(ql_->get_question_string(index));
 			try {
 				ql_->delete_question(index);
 			} catch (std::string& e) {
 				*out_ << e << std::endl;
 			}
-			*out_ << "Vraag " << ++index << " (" << text << ") verwijderd."
+			*out_ << "Vraag " << index << " (" << text << ") verwijderd."
 					<< std::endl;
 		} else {
 			//error weergeven
